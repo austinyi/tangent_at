@@ -146,7 +146,6 @@ def compute_angle(args, result_dir, idx, x, x_adv):
         value = torch.sqrt(nominator/denom)
         angle = np.arccos(np.clip(value.item(),-1,1))
         Angles.append(angle)
-        
         # Previous method
         #AAA = torch.tensor(np.load(os.path.join(result_dir,'AAA',args['dataset'],'AAA_'+str(idx[i].item())+'.npy'))).cuda() #A(A^TA)^-1A^T
         #w = torch.matmul(AAA, z) # A(A^TA)^-1A^T*(x_adv-x)

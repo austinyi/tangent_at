@@ -116,7 +116,7 @@ def main():
                         help="Perform validation only.")
     parser.add_argument("--save_model", action="store_false", default=True,
                         help="Whether to save the model trained.")
-    parser.add_argument("--root", default=r'D:\yaoli',
+    parser.add_argument("--root", default=r'/',
                         help="Path to the root folder that contains data folder.")
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")

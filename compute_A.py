@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--init", default='cifar10_plain')
     parser.add_argument("--root", default='/data', help='the directory that contains the project folder')
     parser.add_argument("--root_data", default='/', help='the dir that contains the data folder')
-    parser.add_argument("--result_dir", default='/data', help='the working directory that contains AA, AAA')
+    parser.add_argument("--result_dir", default='/data/tangent', help='the working directory that contains AA, AAA')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--ae_load", default='ae_loss0.589.pt',

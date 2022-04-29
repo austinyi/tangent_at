@@ -30,7 +30,7 @@ def loaddata(args):
         ])
         
         trainset = CIFAR10(root=os.path.join(args['root_data'],'data'),
-                                 train=True,download=False,transform=transform_train) #return index as well
+                                 train=True,download=True,transform=transform_train) #return index as well
         # trainset = datasets.CIFAR10(root=os.path.join(args['root_data'],'data'),
         #                         train=True,download=False,transform=transform_train)        
         train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])                

@@ -59,8 +59,8 @@ if __name__ == "__main__":
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")   
     parser.add_argument("--file_list", default=['cifar10_42adv_angle0.814','cifar10_425adv_angle0.82','cifar10_43adv_angle0.82'], help='list of models to test')
     parser.add_argument("--init", default=None)
-    parser.add_argument("--root", default='/proj/STOR/yaoli', help='D:\yaoli, /proj/STOR/yaoli')
-    parser.add_argument("--root_data", default='/proj/STOR/yaoli', help='D:\yaoli, /proj/STOR/yaoli')
+    parser.add_argument("--root", default='/data', help='D:\yaoli, /proj/STOR/yaoli')
+    parser.add_argument("--root_data", default='/', help='D:\yaoli, /proj/STOR/yaoli')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false",  default=True,

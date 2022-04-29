@@ -57,9 +57,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")   
     parser.add_argument("--init", default='cifar10_plain')
-    parser.add_argument("--root", default='/proj/STOR/yaoli', help='the directory that contains the project folder')
-    parser.add_argument("--root_data", default='/proj/STOR/yaoli', help='the dir that contains the data folder')
-    parser.add_argument("--result_dir", default='/pine/scr/y/a/yaoli/data', help='the working directory that contains AA, AAA')
+    parser.add_argument("--root", default='/data', help='the directory that contains the project folder')
+    parser.add_argument("--root_data", default='/', help='the dir that contains the data folder')
+    parser.add_argument("--result_dir", default='/data', help='the working directory that contains AA, AAA')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--ae_load", default='ae_loss0.589.pt',

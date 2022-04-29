@@ -128,8 +128,8 @@ if __name__ == "__main__":
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--root", default=r'/data', help='the directory that contains the project folder')
-    parser.add_argument("--root_data", default=r'/data', help='the dir that contains the data folder')
-    parser.add_argument("--result_dir", default=r'/data/AA', help='the working directory that contains AA, AAA')
+    parser.add_argument("--root_data", default=r'/', help='the dir that contains the data folder')
+    parser.add_argument("--result_dir", default=r'/data', help='the working directory that contains AA, AAA')
     parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")

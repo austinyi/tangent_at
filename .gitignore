@@ -1,5 +1,5 @@
-setup/__pycache__
-__pycache__
+setup/__pycache__/
+__pycache__/
 .DS_Store
 .idea/
 models/.DS_Store

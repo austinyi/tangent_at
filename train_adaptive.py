@@ -37,7 +37,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])  
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
-        # trainning
+        # training
         ave_loss = 0
         step = 0
         for idx, x, target in tqdm(train_loader):            

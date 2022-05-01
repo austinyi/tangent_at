@@ -117,7 +117,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
-    parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")   
+    parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")
+    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
     parser.add_argument("-n", "--num_epoch", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("-l", "--lr", type=float, default=1e-3)
@@ -134,7 +135,9 @@ if __name__ == "__main__":
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false",  default=True,
-                        help="shuffle in training or not")    
+                        help="shuffle in training or not")
+    parser.add_argument('--depth', type=int, default=32, help='WRN depth')
+    parser.add_argument('--width', type=int, default=10, help='WRN width factor')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name']+'_'+args['criterion']+'_'+args['method']
     if args['dataset'] == 'mnist':

@@ -92,10 +92,6 @@ class Wide_ResNet_Madry(nn.Module):
         return self.fc(out)
 
 
+def wrn(depth, num_classes, widen_factor, dropRate=0):
+    return Wide_ResNet_Madry(depth, num_classes, widen_factor, dropRate)
 
-#def test():
-#    net = Wide_ResNet_Madry()
-#    y = net(Variable(torch.randn(1, 3, 32, 32)))
-    #print(y.size())
-#    print(net)
-# test()

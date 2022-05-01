@@ -71,9 +71,18 @@ def loadmodel(args):
     if args['dataset'] == 'mnist':
         from setup.setup_mnist import BasicCNN
         model = BasicCNN()           
-    elif args['dataset'] == 'cifar10':       
-        from setup.setup_vgg import vgg16
-        model = vgg16()
+    elif args['dataset'] == 'cifar10':
+        if args['model'] == 'vgg16':
+            from setup.setup_vgg import vgg16
+            model = vgg16()
+        elif args['model'] == 'wrn':
+            from setup.setup_wrn import wrn
+            depth = args['depth']
+            width = args['width']
+            model = wrn(depth=depth, num_classes=10, widen_factor=width, dropRate=0)
+        else:
+            print("unknown model")
+            return
     elif args['dataset'] == 'stl10':       
         from setup.setup_svhn import SVHN32   
         model = SVHN32()

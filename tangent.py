@@ -114,9 +114,12 @@ def compute_tangent(args, result_dir, idx, x, x_adv):
     x_adv = x_adv.reshape(m,-1)
     comp = []
     for i in range(len(idx)):
-        AAA = torch.tensor(np.load(os.path.join(result_dir,'AAA',args['dataset'],'AAA_'+str(idx[i].item())+'.npy'))).cuda() #A(A^TA)^-1A^T, n by n
+        #AAA = torch.tensor(np.load(os.path.join(result_dir,'AAA',args['dataset'],'AAA_'+str(idx[i].item())+'.npy'))).cuda() #A(A^TA)^-1A^T, n by n
         #AA = torch.tensor(np.load(os.path.join(result_dir,'AA',args['dataset'],'AA_'+str(idx[i].item())+'.npy'))).cuda()
         #b = torch.matmul(x_adv[i,:]-x[i,:], AA) # (x_adv-x)*A(A^TA)^-1
+        AA = torch.tensor(np.load(os.path.join(result_dir,'AA',args['dataset'],'AA_'+str(idx[i].item())+'.npy'))).cuda() #AA: A(A^TA)^-1, n by d
+        A = torch.tensor(np.load(os.path.join(result_dir,'A',args['dataset'],'A_'+str(idx[i].item())+'.npy'))).cuda() #A: A^T, d by n
+        AAA = torch.matmul(AA, A) # A(A^TA)^-1A^T
         b = torch.matmul(AAA, x_adv[i,:]-x[i,:]) # A(A^TA)^-1A^T*(x_adv-x), n by 1
         comp.append(torch.norm(b).item())
     return np.array(comp)

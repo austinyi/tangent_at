@@ -140,7 +140,7 @@ if __name__ == "__main__":
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
         args['alpha'] = 0.01
-        args['num_k'] = 20
+        args['num_k'] = 7
         args['epsilon'] = 8 / 255
         args['batch_size'] = 100
         args['print_every'] = 250

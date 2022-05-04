@@ -50,7 +50,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = x
             else:
                 target_pred = pred_batch(x, model)
-                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
+                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary) # 좀 차이남
 
                 if args['criterion'] == 'angle':
                     end = time.time()
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
         args['alpha'] = 0.01
-        args['num_k'] = 20
+        args['num_k'] = 7
         args['epsilon'] = 8 / 255
         args['batch_size'] = 100
         args['print_every'] = 250

@@ -53,10 +53,22 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
 
                 if args['criterion'] == 'angle':
+                    end = time.time()
+                    print("1:", end - start)
+                    start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
+                    end = time.time()
+                    print("1:", end - start)
+                    start = time.time()
                     ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['precision'],
                                 args['round'])
+                    end = time.time()
+                    print("1:", end - start)
+                    start = time.time()
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
+                    end = time.time()
+                    print("1:", end - start)
+                    start = time.time()
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
                     ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['precision'],

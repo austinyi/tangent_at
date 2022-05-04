@@ -47,6 +47,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             else:
                 target_pred = pred_batch(x, model)
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
+                x_adv = x_adv_init
+                '''
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
                     ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['precision'], args['round'])
@@ -57,6 +59,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")    
+                '''
             loss = train_criterion(model(x_adv),target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1    
             optimizer.zero_grad()

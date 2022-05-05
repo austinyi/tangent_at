@@ -43,7 +43,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         ave_loss = 0
         step = 0
         for idx, x, target in tqdm(train_loader):
-            start = time.time()
+            #start = time.time()
 
             x, target = to_var(x), to_var(target)
             if args['clean']:
@@ -53,22 +53,23 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary) # 좀 차이남
 
                 if args['criterion'] == 'angle':
-                    end = time.time()
-                    print("1:", end - start)
-                    start = time.time()
+                    #end = time.time()
+                    #print("1:", end - start)
+                    #start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    end = time.time()
-                    print("1:", end - start)
-                    start = time.time()
+                    print(angles)
+                    #end = time.time()
+                    #print("1:", end - start)
+                    #start = time.time()
                     ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['precision'],
                                 args['round'])
-                    end = time.time()
-                    print("1:", end - start)
-                    start = time.time()
+                    #end = time.time()
+                    #print("1:", end - start)
+                    #start = time.time()
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
-                    end = time.time()
-                    print("1:", end - start)
-                    start = time.time()
+                    #end = time.time()
+                    #print("1:", end - start)
+                    #start = time.time()
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
                     ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['precision'],
@@ -77,17 +78,17 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 else:
                     raise Exception("No such criterion")
 
-            end = time.time()
-            print("The time of generating adversarial example:", end - start)
+            #end = time.time()
+            #print("The time of generating adversarial example:", end - start)
 
             start = time.time()
 
             loss = train_criterion(model(x_adv), target)
 
-            end = time.time()
-            print("The time of forward passing:", end - start)
+            #end = time.time()
+            #print("The time of forward passing:", end - start)
 
-            start = time.time()
+            #start = time.time()
 
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
             optimizer.zero_grad()
@@ -95,8 +96,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             optimizer.step()
             step += 1
 
-            end = time.time()
-            print("The time of backward passing:", end - start)
+            #end = time.time()
+            #print("The time of backward passing:", end - start)
             if (step + 1) % args['print_every'] == 0:
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))

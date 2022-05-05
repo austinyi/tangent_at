@@ -39,11 +39,12 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
 
-    angle = []
+    angle_epoch = []
     for epoch in range(args['num_epoch']):
         # training
         ave_loss = 0
         step = 0
+        angle_batch = []
         for idx, x, target in tqdm(train_loader):
             #start = time.time()
 
@@ -59,8 +60,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     #print("1:", end - start)
                     #start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    angle.append(np.mean(angles))
-                    print(angle)
+                    angle_batch.append(np.mean(angles))
+                    #print(angle)
                     #end = time.time()
                     #print("1:", end - start)
                     #start = time.time()
@@ -84,7 +85,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             #end = time.time()
             #print("The time of generating adversarial example:", end - start)
 
-            start = time.time()
+            #start = time.time()
 
             loss = train_criterion(model(x_adv), target)
 
@@ -105,11 +106,13 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
 
-        print(angle)
-        print(np.mean(angle))
+        angle_epoch.append(np.mean(np.mean(angle_batch)))
+        print(angle_epoch)
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
         savefile(args['file_name'] + str(round(acc, 3)), model, args['dataset'])
+
+    print(angle_epoch)
     return model
 
 

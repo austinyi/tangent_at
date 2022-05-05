@@ -38,6 +38,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
+
+    angle = []
     for epoch in range(args['num_epoch']):
         # training
         ave_loss = 0
@@ -57,7 +59,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     #print("1:", end - start)
                     #start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    print(np.mean(angles))
+                    angle.append(np.mean(angle))
+                    print(angle)
                     #end = time.time()
                     #print("1:", end - start)
                     #start = time.time()

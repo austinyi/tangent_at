@@ -57,7 +57,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     #print("1:", end - start)
                     #start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    print(angles)
+                    print(np.mean(angles))
                     #end = time.time()
                     #print("1:", end - start)
                     #start = time.time()

@@ -69,10 +69,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                                 args['round'])
                     #end = time.time()
                     #print("1:", end - start)
-                    #start = time.time()
+                    start = time.time()
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
-                    #end = time.time()
-                    #print("1:", end - start)
+                    end = time.time()
+                    print("1:", end - start)
                     #start = time.time()
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)

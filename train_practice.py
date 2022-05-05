@@ -46,7 +46,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         step = 0
         angle_batch = []
         for idx, x, target in tqdm(train_loader):
-            #start = time.time()
+            start0 = time.time()
 
             x, target = to_var(x), to_var(target)
             if args['clean']:
@@ -82,8 +82,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 else:
                     raise Exception("No such criterion")
 
-            #end = time.time()
-            #print("The time of generating adversarial example:", end - start)
+            end0 = time.time()
+            print("The time of generating adversarial example:", end0 - start0)
 
             #start = time.time()
 

@@ -40,7 +40,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         # training
         ave_loss = 0
         step = 0
-        for idx, x, target in tqdm(train_loader):            
+        for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
             if args['clean']:
                 x_adv = x
@@ -57,10 +57,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
-                    raise Exception("No such criterion")    
+                    raise Exception("No such criterion")
 
             loss = train_criterion(model(x_adv),target)
-            ave_loss = ave_loss * 0.9 + loss.item() * 0.1    
+            ave_loss = ave_loss * 0.9 + loss.item() * 0.1
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -109,6 +109,7 @@ def main(args):
     
     print('==> Loading model..')
     model = loadmodel(args)
+    model = torch.nn.DataParallel(model)
     
     print('==> Training starts..')
     result_dir = args['result_dir']

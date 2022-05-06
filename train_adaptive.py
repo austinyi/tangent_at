@@ -109,8 +109,7 @@ def main(args):
     
     print('==> Loading model..')
     model = loadmodel(args)
-    model = torch.nn.DataParallel(model)
-    
+
     print('==> Training starts..')
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda) 

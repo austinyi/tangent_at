@@ -158,28 +158,4 @@ def compute_angle(args, result_dir, idx, x, x_adv):
         #Angles.append(angle)
     return np.array(Angles)
 
-
-def compute_angle_nosqrt(args, result_dir, idx, x, x_adv):
-    m = x.shape[0]
-    x = x.reshape(m,-1)
-    x_adv = x_adv.reshape(m,-1)
-    Angles = []
-    for i in range(len(idx)):
-        z = x_adv[i,:]-x[i,:] # n by 1
-        AA = torch.tensor(np.load(os.path.join(result_dir,'AA',args['dataset'],'AA_'+str(idx[i].item())+'.npy'))).cuda() #AA: A(A^TA)^-1, n by d
-        nominator_part1 = torch.matmul(AA.T,z) # (A^TA)^{-1}A^T(x^a-x) --> d * 1
-        A = torch.tensor(np.load(os.path.join(result_dir,'A',args['dataset'],'A_'+str(idx[i].item())+'.npy'))).cuda() #A: A^T, d by n
-        nominator_part2 = torch.matmul(A,z) # A^T(x^a-x) --> d * 1
-        nominator = torch.matmul(nominator_part1.T, nominator_part2)
-        denom = torch.matmul(z.T,z)
-        value = nominator/denom
-        angle = np.arccos(np.clip(value.item(),-1,1))
-        Angles.append(angle)
-        # Previous method
-        #AAA = torch.tensor(np.load(os.path.join(result_dir,'AAA',args['dataset'],'AAA_'+str(idx[i].item())+'.npy'))).cuda() #A(A^TA)^-1A^T
-        #w = torch.matmul(AAA, z) # A(A^TA)^-1A^T*(x_adv-x)
-        #z = unit_vector(z)
-        #w = unit_vector(w)
-        #angle = np.arccos(np.clip(torch.dot(w,z).item(),-1,1))
-        #Angles.append(angle)
-    return np.array(Angles)
+]

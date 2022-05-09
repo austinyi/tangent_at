@@ -157,5 +157,3 @@ def compute_angle(args, result_dir, idx, x, x_adv):
         #angle = np.arccos(np.clip(torch.dot(w,z).item(),-1,1))
         #Angles.append(angle)
     return np.array(Angles)
-
-]

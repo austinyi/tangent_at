@@ -12,7 +12,7 @@ from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data
 
 
-def get_ep(inputs, epsilon, criterion, method, threshold=0.4, precision=3, rou=True):
+def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precision=3, rou=True):
     cri_method = criterion + '_' + method
     if cri_method == 'angle_num':
         ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
@@ -28,6 +28,20 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, precision=3, rou=T
     elif cri_method == 'angle_skip':
         ep = np.zeros(inputs.size)
         ep[inputs < threshold*math.pi] = epsilon
+    elif cri_method == 'tan_skip':
+        ep = np.zeros(inputs.size)
+        ep[inputs > threshold] = epsilon
+    elif cri_method == 'angle_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1
+        cri = int(inputs.size*ratio)
+        ep[rank >= cri] = epsilon
+    elif cri_method == 'tan_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(np.argsort(inputs)) + 1
+        cri = int(inputs.size * ratio)
+        ep[rank >= cri] = epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -55,13 +69,13 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['precision'],
-                                args['round'])
+                    ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
+                                args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
-                    ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['precision'],
-                                args['round'])
+                    ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
+                                args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")
@@ -147,7 +161,8 @@ if __name__ == "__main__":
                         help="shuffle in training or not")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
-    parser.add_argument('--threshold', type=float, default=0.4, help='WRN width factor')
+    parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
+    parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
     if args['dataset'] == 'mnist':

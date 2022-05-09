@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("-l", "--lr", type=float, default=1e-3)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')

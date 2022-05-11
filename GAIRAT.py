@@ -73,12 +73,12 @@ def save_checkpoint(state, checkpoint=out_dir, filename='checkpoint.pth.tar'):
 # Adjust lambda for weight assignment using epoch
 def adjust_Lambda(epoch):
     Lam = float(args['Lambda'])
-    if args['epochs'] >= 110:
+    if args['num_epoch'] >= 110:
         # Train Wide-ResNet
         Lambda = args['Lambda_max']
         if args['Lambda_schedule'] == 'linear':
             if epoch >= 60:
-                Lambda = args['Lambda_max'] - (epoch / args['epochs']) * (args['Lambda_max'] - Lam)
+                Lambda = args['Lambda_max'] - (epoch / args['num_epoch']) * (args['Lambda_max'] - Lam)
         elif args['Lambda_schedule'] == 'piecewise':
             if epoch >= 60:
                 Lambda = Lam
@@ -94,7 +94,7 @@ def adjust_Lambda(epoch):
         Lambda = args['Lambda_max']
         if args['Lambda_schedule'] == 'linear':
             if epoch >= 30:
-                Lambda = args['Lambda_max'] - (epoch / args['epochs']) * (args['Lambda_max'] - Lam)
+                Lambda = args['Lambda_max'] - (epoch / args['num_epoch']) * (args['Lambda_max'] - Lam)
         elif args['Lambda_schedule'] == 'piecewise':
             if epoch >= 30:
                 Lambda = Lam

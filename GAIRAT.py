@@ -297,7 +297,7 @@ if __name__ == "__main__":
     print(args)
 
     # Training settings
-    seed = args.seed
+    seed = args['seed']
     #momentum = args.momentum
     #weight_decay = args.weight_decay
     #resume = args.resume

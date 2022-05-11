@@ -152,7 +152,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
 
-            x_adv, Kappa = GA_PGD(model, x, target, args['epsilon'], args['step_size'], args['num_k'],
+            x_adv, Kappa = GA_PGD(model, x, target, args['epsilon'], args['alpha'], args['num_k'],
                                          loss_fn="cent",
                                          category="Madry", rand_init=True)
 
@@ -231,8 +231,8 @@ if __name__ == "__main__":
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     #parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='SGD momentum')
-    parser.add_argument('--epsilon', type=float, default=0.031, help='perturbation bound')
-    parser.add_argument('--step-size', type=float, default=0.007, help='step size')
+    #parser.add_argument('--epsilon', type=float, default=0.031, help='perturbation bound')
+    #parser.add_argument('--step-size', type=float, default=0.007, help='step size')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--random', type=bool, default=True,
                         help="whether to initiat adversarial sample with random noise")

@@ -152,16 +152,16 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
 
-            x_adv, Kappa = GA_PGD(model, x, target, args.epsilon, args.step_size, args['num_k'],
+            x_adv, Kappa = GA_PGD(model, x, target, args['epsilon'], args['step_size'], args['num_k'],
                                          loss_fn="cent",
                                          category="Madry", rand_init=True)
 
             model.train()
-            if (epoch + 1) >= args.begin_epoch:
+            if (epoch + 1) >= args['begin_epoch']:
                 Kappa = Kappa.cuda()
                 loss = train_criterion(model(x_adv),target)
                 # Calculate weight assignment according to geometry value
-                normalized_reweight = GAIR(args['num_k'], Kappa, Lambda, args.weight_assignment_function)
+                normalized_reweight = GAIR(args['num_k'], Kappa, Lambda, args['weight_assignment_function'])
                 loss = loss.mul(normalized_reweight).mean()
             else:
                 loss = train_criterion(model(x_adv),target)

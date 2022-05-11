@@ -24,17 +24,17 @@ def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
         rank = np.argsort(np.argsort(inputs))+1
         ep = rank/inputs.shape[0] * epsilon
     else:
-        raise Exception("No such criterion method combination")   
+        raise Exception("No such criterion method combination")
     if rou:
-        ep = np.round(ep, precision)        
+        ep = np.round(ep, precision)
     return ep
 
 
-def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):    
+def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])  
+    optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
         # training
@@ -97,7 +97,7 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     param = {
     'test_batch_size': args['batch_size'],
     'epsilon': args['epsilon'],
-    }            
+    }
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
@@ -106,16 +106,16 @@ def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
     train_loader, test_loader = loaddata(args)
-    
+
     print('==> Loading model..')
     model = loadmodel(args)
 
     print('==> Training starts..')
     result_dir = args['result_dir']
-    model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda) 
+    model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader,model,use_cuda=use_cuda,batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')

@@ -73,7 +73,7 @@ def save_checkpoint(state, checkpoint=out_dir, filename='checkpoint.pth.tar'):
 # Adjust lambda for weight assignment using epoch
 def adjust_Lambda(epoch):
     Lam = float(args['Lambda'])
-    if args['epochs >= 110']:
+    if args['epochs'] >= 110:
         # Train Wide-ResNet
         Lambda = args['Lambda_max']
         if args['Lambda_schedule'] == 'linear':

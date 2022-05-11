@@ -265,7 +265,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_shuffle", action="store_false", default=True,
                         help="shuffle in training or not")
     args = vars(parser.parse_args())
-    args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
+    #args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
 
     if args['dataset'] == 'mnist':
         args['alpha'] = 0.02

@@ -136,7 +136,7 @@ else:
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()
-        model = torch.nn.DataParallel(model)
+        #model = torch.nn.DataParallel(model)
     #optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=momentum, weight_decay=weight_decay)
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])

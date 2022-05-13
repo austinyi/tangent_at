@@ -163,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
     parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
     parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
-    parser.add_argument('--train_epsilon', type=float, default=16/255, help='adaptive train ratio')
+    parser.add_argument('--train_epsilon', type=float, default=0.031, help='adaptive train ratio')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
     if args['dataset'] == 'mnist':

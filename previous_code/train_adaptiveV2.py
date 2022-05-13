@@ -1,8 +1,7 @@
 import os
-# os.chdir(r'D:\yaoli\tangent')
+#os.chdir(r'D:\yaoli\tangent')
 import torch
 import argparse
-import math
 import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
@@ -12,36 +11,18 @@ from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data
 
 
-def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precision=3, rou=True):
+def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
     cri_method = criterion + '_' + method
     if cri_method == 'angle_num':
-        ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
+        ep = (1/(inputs*np.max(1/inputs)))*epsilon
     elif cri_method == 'tan_num':
-        ep = inputs / np.max(inputs) * epsilon
+        ep = inputs/np.max(inputs)*epsilon
     elif cri_method == 'angle_rank':
-        rank = np.argsort(
-            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
-        ep = rank / inputs.shape[0] * epsilon
+        rank = np.argsort(np.argsort(1/inputs))+1 # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
+        ep = rank/inputs.shape[0] * epsilon
     elif cri_method == 'tan_rank':
-        rank = np.argsort(np.argsort(inputs)) + 1
-        ep = rank / inputs.shape[0] * epsilon
-    elif cri_method == 'angle_skip':
-        ep = np.zeros(inputs.size)
-        ep[inputs < threshold*math.pi] = epsilon
-    elif cri_method == 'tan_skip':
-        ep = np.zeros(inputs.size)
-        ep[inputs > threshold] = epsilon
-    elif cri_method == 'angle_rank_binary':
-        ep = np.zeros(inputs.size)
-        rank = np.argsort(
-            np.argsort(1 / inputs)) + 1
-        cri = int(inputs.size*ratio)
-        ep[rank >= cri] = epsilon
-    elif cri_method == 'tan_rank_binary':
-        ep = np.zeros(inputs.size)
-        rank = np.argsort(np.argsort(inputs)) + 1
-        cri = int(inputs.size * ratio)
-        ep[rank >= cri] = epsilon
+        rank = np.argsort(np.argsort(inputs))+1
+        ep = rank/inputs.shape[0] * epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -53,7 +34,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     if use_cuda:
         model = model.cuda()
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
+    optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
         # training
@@ -69,18 +50,16 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                                args['precision'], args['round'])
+                    ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
-                    ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                                args['precision'], args['round'])
+                    ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")
 
-            loss = train_criterion(model(x_adv), target)
+            loss = train_criterion(model(x_adv),target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
             optimizer.zero_grad()
             loss.backward()
@@ -91,7 +70,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
-        # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
+        #savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
     return model
 
 
@@ -107,7 +86,7 @@ def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
         _, pred_label = torch.max(out.data, 1)
         total_cnt += x.data.size()[0]
         correct_cnt += (pred_label == target.data).sum()
-    acc = float(correct_cnt.double() / total_cnt)
+    acc = float(correct_cnt.double()/total_cnt)
     print("The prediction accuracy on testset is {}".format(acc))
     return acc
 
@@ -116,8 +95,8 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     param = {
-        'test_batch_size': args['batch_size'],
-        'epsilon': args['epsilon'],
+    'test_batch_size': args['batch_size'],
+    'epsilon': args['epsilon'],
     }
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
@@ -134,19 +113,19 @@ def main(args):
     print('==> Training starts..')
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
-    testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
+    testClassifier(test_loader,model,use_cuda=use_cuda,batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
-    parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
+    parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
     parser.add_argument("-n", "--num_epoch", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("-l", "--lr", type=float, default=1e-3)
-    parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary'])
+    parser.add_argument("--criterion", default='angle', choices=['angle','tan'])
+    parser.add_argument("--method", default='num', choices=['num','rank'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -157,14 +136,12 @@ if __name__ == "__main__":
     parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
-    parser.add_argument("--train_shuffle", action="store_false", default=True,
+    parser.add_argument("--train_shuffle", action="store_false",  default=True,
                         help="shuffle in training or not")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
-    parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
-    parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
     args = vars(parser.parse_args())
-    args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
+    args['file_name'] = args['file_name']+'_'+args['criterion']+'_'+args['method']
     if args['dataset'] == 'mnist':
         args['alpha'] = 0.02
         args['num_k'] = 40
@@ -174,7 +151,7 @@ if __name__ == "__main__":
     elif args['dataset'] == 'cifar10':
         args['alpha'] = 0.01
         args['num_k'] = 7
-        args['epsilon'] = 8 / 255
+        args['epsilon'] = 8/255
         args['batch_size'] = 100
         args['print_every'] = 250
     elif args['dataset'] == 'stl10':

@@ -42,6 +42,13 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
         rank = np.argsort(np.argsort(inputs)) + 1
         cri = int(inputs.size * ratio)
         ep[rank >= cri] = epsilon
+    elif cri_method == 'angle_rank_square':
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
+        ep = np.square(rank / inputs.shape[0]) * epsilon
+    elif cri_method == 'tan_rank_square':
+        rank = np.argsort(np.argsort(inputs)) + 1
+        ep = np.square(rank / inputs.shape[0]) * epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -146,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("-l", "--lr", type=float, default=1e-3)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_square'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')

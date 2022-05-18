@@ -61,7 +61,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     if use_cuda:
         model = model.cuda()
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr_max'], momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
         # training

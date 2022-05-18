@@ -56,6 +56,7 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
     return ep
 
 
+
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()
@@ -89,6 +90,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
             loss = train_criterion(model(x_adv), target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
+
+            model.train()
+            lr = lr_schedule(epoch + 1)
+            optimizer.param_groups[0].update(lr=lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -151,7 +156,12 @@ if __name__ == "__main__":
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
     parser.add_argument("-n", "--num_epoch", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    #parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    parser.add_argument('--lr-schedule', default='piecewise',
+                        choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
+    parser.add_argument('--lr-max', default=0.1, type=float)
+    parser.add_argument('--lr-one-drop', default=0.01, type=float)
+    parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
     parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_square'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
@@ -201,4 +211,45 @@ if __name__ == "__main__":
     else:
         print('invalid dataset')
     print(args)
+
+    # Learning schedules
+    if args['lr_schedule'] == 'superconverge':
+        lr_schedule = lambda t: np.interp([t], [0, args['epochs'] * 2 // 5, args['epochs']], [0, args['lr_max'], 0])[0]
+    elif args['lr_schedule'] == 'piecewise':
+        def lr_schedule(t):
+            if args['epochs'] >= 110:
+                # Train Wide-ResNet
+                if t / args['epochs'] < 0.5:
+                    return args['lr_max']
+                elif t / args['epochs'] < 0.75:
+                    return args['lr_max'] / 10.
+                elif t / args['epochs'] < (11 / 12):
+                    return args['lr_max'] / 100.
+                else:
+                    return args['lr_max'] / 200.
+            else:
+                # Train ResNet
+                if t / args['epochs'] < 0.3:
+                    return args.lr_max
+                elif t / args['epochs'] < 0.6:
+                    return args['lr_max'] / 10.
+                else:
+                    return args['lr_max'] / 100.
+    elif args['lr_schedule'] == 'linear':
+        lr_schedule = lambda t: np.interp([t], [0, args['epochs'] // 3, args['epochs'] * 2 // 3, args['epochs']],
+                                          [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
+    elif args['lr_schedule'] == 'onedrop':
+        def lr_schedule(t):
+            if t < args['lr_drop_epoch']:
+                return args['lr_max']
+            else:
+                return args['lr_one_drop']
+    elif args['lr_schedule'] == 'multipledecay':
+        def lr_schedule(t):
+            return args['lr_max'] - (t // (args['epochs'] // 10)) * (args['lr_max'] / 10)
+    elif args['lr_schedule'] == 'cosine':
+        def lr_schedule(t):
+            return args['lr_max'] * 0.5 * (1 + np.cos(t / args['epochs'] * np.pi))
+
+
     main(args)

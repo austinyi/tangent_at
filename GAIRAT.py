@@ -14,8 +14,8 @@ from GAIR import GAIR
 #from utils import Logger
 
 
-
 '''
+
 # Learning schedules
 if args.lr_schedule == 'superconverge':
     lr_schedule = lambda t: np.interp([t], [0, args.epochs * 2 // 5, args.epochs], [0, args.lr_max, 0])[0]
@@ -295,6 +295,47 @@ if __name__ == "__main__":
     else:
         print('invalid dataset')
     print(args)
+
+    # Learning schedules
+    if args['lr_schedule'] == 'superconverge':
+        lr_schedule = lambda t: \
+        np.interp([t], [0, args['num_epoch'] * 2 // 5, args['num_epoch']], [0, args['lr_max'], 0])[0]
+    elif args['lr_schedule'] == 'piecewise':
+        def lr_schedule(t):
+            if args['num_epoch'] >= 110:
+                # Train Wide-ResNet
+                if t / args['num_epoch'] < 0.5:
+                    return args['lr_max']
+                elif t / args['num_epoch'] < 0.75:
+                    return args['lr_max'] / 10.
+                elif t / args['num_epoch'] < (11 / 12):
+                    return args['lr_max'] / 100.
+                else:
+                    return args['lr_max'] / 200.
+            else:
+                # Train ResNet
+                if t / args['num_epoch'] < 0.3:
+                    return args.lr_max
+                elif t / args['num_epoch'] < 0.6:
+                    return args['lr_max'] / 10.
+                else:
+                    return args['lr_max'] / 100.
+    elif args['lr_schedule'] == 'linear':
+        lr_schedule = lambda t: \
+        np.interp([t], [0, args['num_epoch'] // 3, args['num_epoch'] * 2 // 3, args['num_epoch']],
+                  [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
+    elif args['lr_schedule'] == 'onedrop':
+        def lr_schedule(t):
+            if t < args['lr_drop_epoch']:
+                return args['lr_max']
+            else:
+                return args['lr_one_drop']
+    elif args['lr_schedule'] == 'multipledecay':
+        def lr_schedule(t):
+            return args['lr_max'] - (t // (args['num_epoch'] // 10)) * (args['lr_max'] / 10)
+    elif args['lr_schedule'] == 'cosine':
+        def lr_schedule(t):
+            return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
 
     # Training settings
     seed = args['seed']

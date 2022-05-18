@@ -139,7 +139,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         #model = torch.nn.DataParallel(model)
     #optimizer = optim.SGD(model.parameters(), lr=args.lr_max, momentum=momentum, weight_decay=weight_decay)
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(),lr=args['lr'],momentum=0.9, weight_decay=args['weight_decay'])
+    optimizer = torch.optim.SGD(model.parameters(),lr=args['lr_max'],momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
         # training
@@ -241,11 +241,11 @@ if __name__ == "__main__":
     parser.add_argument('--drop-rate', type=float, default=0.0, help='WRN drop rate')
     #parser.add_argument('--resume', type=str, default=None, help='whether to resume training')
     #parser.add_argument('--out-dir', type=str, default='./GAIRAT_result', help='dir of output')
-    # parser.add_argument('--lr-schedule', default='piecewise',
-    #                    choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
-    # parser.add_argument('--lr-max', default=0.1, type=float)
-    # parser.add_argument('--lr-one-drop', default=0.01, type=float)
-    # parser.add_argument('--lr-drop-epoch', default=100, type=int)
+    parser.add_argument('--lr-schedule', default='piecewise',
+                        choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
+    parser.add_argument('--lr-max', default=0.1, type=float)
+    parser.add_argument('--lr-one-drop', default=0.01, type=float)
+    parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("-l", "--lr", type=float, default=1e-3)
     parser.add_argument('--Lambda', type=str, default='-1.0', help='parameter for GAIR')
     parser.add_argument('--Lambda_max', type=float, default=float('inf'), help='max Lambda')

@@ -230,7 +230,7 @@ if __name__ == "__main__":
             else:
                 # Train ResNet
                 if t / args['num_epoch'] < 0.3:
-                    return args.lr_max
+                    return args['lr_max']
                 elif t / args['num_epoch'] < 0.6:
                     return args['lr_max'] / 10.
                 else:

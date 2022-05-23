@@ -2,6 +2,7 @@ import os
 # os.chdir(r'D:\yaoli\tangent')
 import torch
 import argparse
+import math
 import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
@@ -11,7 +12,7 @@ from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data
 
 
-def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
+def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precision=3, rou=True):
     cri_method = criterion + '_' + method
     if cri_method == 'angle_num':
         ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
@@ -24,6 +25,30 @@ def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
+    elif cri_method == 'angle_skip':
+        ep = np.zeros(inputs.size)
+        ep[inputs < threshold*math.pi] = epsilon
+    elif cri_method == 'tan_skip':
+        ep = np.zeros(inputs.size)
+        ep[inputs > threshold] = epsilon
+    elif cri_method == 'angle_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1
+        cri = int(inputs.size*ratio)
+        ep[rank >= cri] = epsilon
+    elif cri_method == 'tan_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(np.argsort(inputs)) + 1
+        cri = int(inputs.size * ratio)
+        ep[rank >= cri] = epsilon
+    elif cri_method == 'angle_rank_square':
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
+        ep = np.square(rank / inputs.shape[0]) * epsilon
+    elif cri_method == 'tan_rank_square':
+        rank = np.argsort(np.argsort(inputs)) + 1
+        ep = np.square(rank / inputs.shape[0]) * epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -35,7 +60,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     if use_cuda:
         model = model.cuda()
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr_max'], momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
     for epoch in range(args['num_epoch']):
         # training
@@ -51,6 +76,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
             loss = train_criterion(model(x_adv), target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
+
+            model.train()
+            lr = lr_schedule(epoch + 1)
+            optimizer.param_groups[0].update(lr=lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -60,7 +89,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
-        savefile(args['file_name'] + str(round(acc, 3)), model, args['dataset'])
+        # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
     return model
 
 
@@ -113,9 +142,14 @@ if __name__ == "__main__":
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
     parser.add_argument("-n", "--num_epoch", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    #parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    parser.add_argument('--lr-schedule', default='piecewise',
+                        choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
+    parser.add_argument('--lr-max', default=0.1, type=float)
+    parser.add_argument('--lr-one-drop', default=0.01, type=float)
+    parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_square'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -130,6 +164,9 @@ if __name__ == "__main__":
                         help="shuffle in training or not")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
+    parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
+    parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
+    parser.add_argument('--train_epsilon', type=float, default=0.031, help='adaptive train ratio')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
     if args['dataset'] == 'mnist':
@@ -160,4 +197,45 @@ if __name__ == "__main__":
     else:
         print('invalid dataset')
     print(args)
+
+    # Learning schedules
+    if args['lr_schedule'] == 'superconverge':
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] * 2 // 5, args['num_epoch']], [0, args['lr_max'], 0])[0]
+    elif args['lr_schedule'] == 'piecewise':
+        def lr_schedule(t):
+            if args['num_epoch'] >= 110:
+                # Train Wide-ResNet
+                if t / args['num_epoch'] < 0.5:
+                    return args['lr_max']
+                elif t / args['num_epoch'] < 0.75:
+                    return args['lr_max'] / 10.
+                elif t / args['num_epoch'] < (11 / 12):
+                    return args['lr_max'] / 100.
+                else:
+                    return args['lr_max'] / 200.
+            else:
+                # Train ResNet
+                if t / args['num_epoch'] < 0.3:
+                    return args['lr_max']
+                elif t / args['num_epoch'] < 0.6:
+                    return args['lr_max'] / 10.
+                else:
+                    return args['lr_max'] / 100.
+    elif args['lr_schedule'] == 'linear':
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] // 3, args['num_epoch'] * 2 // 3, args['num_epoch']],
+                                          [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
+    elif args['lr_schedule'] == 'onedrop':
+        def lr_schedule(t):
+            if t < args['lr_drop_epoch']:
+                return args['lr_max']
+            else:
+                return args['lr_one_drop']
+    elif args['lr_schedule'] == 'multipledecay':
+        def lr_schedule(t):
+            return args['lr_max'] - (t // (args['num_epoch'] // 10)) * (args['lr_max'] / 10)
+    elif args['lr_schedule'] == 'cosine':
+        def lr_schedule(t):
+            return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
+
+
     main(args)

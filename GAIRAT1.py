@@ -303,8 +303,7 @@ if __name__ == "__main__":
 
     # Learning schedules
     if args['lr_schedule'] == 'superconverge':
-        lr_schedule = lambda t: \
-        np.interp([t], [0, args['num_epoch'] * 2 // 5, args['num_epoch']], [0, args['lr_max'], 0])[0]
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] * 2 // 5, args['num_epoch']], [0, args['lr_max'], 0])[0]
     elif args['lr_schedule'] == 'piecewise':
         def lr_schedule(t):
             if args['num_epoch'] >= 110:
@@ -320,15 +319,14 @@ if __name__ == "__main__":
             else:
                 # Train ResNet
                 if t / args['num_epoch'] < 0.3:
-                    return args.lr_max
+                    return args['lr_max']
                 elif t / args['num_epoch'] < 0.6:
                     return args['lr_max'] / 10.
                 else:
                     return args['lr_max'] / 100.
     elif args['lr_schedule'] == 'linear':
-        lr_schedule = lambda t: \
-        np.interp([t], [0, args['num_epoch'] // 3, args['num_epoch'] * 2 // 3, args['num_epoch']],
-                  [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] // 3, args['num_epoch'] * 2 // 3, args['num_epoch']],
+                                          [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
     elif args['lr_schedule'] == 'onedrop':
         def lr_schedule(t):
             if t < args['lr_drop_epoch']:

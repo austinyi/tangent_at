@@ -156,6 +156,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                                          category="Madry", rand_init=True)
 
             model.train()
+            '''
             if (epoch + 1) >= args['begin_epoch']:
                 Kappa = Kappa.cuda()
                 loss = train_criterion(model(x_adv),target)
@@ -163,7 +164,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 normalized_reweight = GAIR(args['num_k'], Kappa, Lambda, args['weight_assignment_function'])
                 loss = loss.mul(normalized_reweight).mean()
             else:
-                loss = train_criterion(model(x_adv),target)
+            '''
+            loss = train_criterion(model(x_adv),target)
 
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
             optimizer.zero_grad()

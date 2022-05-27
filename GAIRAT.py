@@ -165,7 +165,12 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             else:
                 loss = train_criterion(model(x_adv),target)
 
+
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
+
+            model.train()
+            lr = lr_schedule(epoch + 1)
+            optimizer.param_groups[0].update(lr=lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

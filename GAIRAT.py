@@ -255,7 +255,7 @@ if __name__ == "__main__":
     parser.add_argument('--Lambda_max', type=float, default=float('inf'), help='max Lambda')
     parser.add_argument('--Lambda_schedule', default='fixed', choices=['linear', 'piecewise', 'fixed'])
     parser.add_argument('--weight_assignment_function', default='Tanh', choices=['Discrete', 'Sigmoid', 'Tanh'])
-    parser.add_argument('--begin_epoch', type=int, default=50, help='when to use GAIR')
+    parser.add_argument('--begin_epoch', type=int, default=60, help='when to use GAIR')
 
     # parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -278,9 +278,9 @@ if __name__ == "__main__":
         args['batch_size'] = 100
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
-        args['alpha'] = 0.01
+        args['alpha'] = 0.007
         args['num_k'] = 7
-        args['epsilon'] = 8 / 255
+        args['epsilon'] = 0.031 #8 / 255
         args['batch_size'] = 100
         args['print_every'] = 250
     elif args['dataset'] == 'stl10':

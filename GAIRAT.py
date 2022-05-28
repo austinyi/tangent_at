@@ -338,7 +338,7 @@ if __name__ == "__main__":
     elif args['lr_schedule'] == 'cosine':
         def lr_schedule(t):
             return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
-        
+
     # Training settings
     seed = args['seed']
     #momentum = args.momentum

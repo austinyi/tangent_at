@@ -148,6 +148,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         Lambda = adjust_Lambda(epoch + 1)
         #num_data = 0
         #train_robust_loss = 0
+        print(train_loader)
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
 

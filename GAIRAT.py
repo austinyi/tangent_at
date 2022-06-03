@@ -4,6 +4,8 @@ import argparse
 import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
+import torchvision
+from torchvision import transforms
 from tqdm import tqdm
 #import torchvision
 #from torchvision import transforms
@@ -214,7 +216,21 @@ def testattack(classifier, test_loader, args, use_cuda=True):
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = loaddata(args)
+    # Setup data loader
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+
+    if args.dataset == "cifar10":
+        trainset = torchvision.datasets.CIFAR10(root='/data', train=True, download=True, transform=transform_train)
+        train_loader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True)
+        testset = torchvision.datasets.CIFAR10(root='/data', train=False, download=True, transform=transform_test)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
 
     print('==> Loading model..')
     model = loadmodel(args)

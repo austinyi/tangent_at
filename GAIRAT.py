@@ -140,6 +140,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
     optimizer = torch.optim.SGD(model.parameters(),lr=args['lr_max'],momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
+
     for epoch in range(args['num_epoch']):
         # training
         ave_loss = 0
@@ -149,7 +150,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         #num_data = 0
         #train_robust_loss = 0
         print(train_loader)
-        for idx, x, target in tqdm(train_loader):
+        for idx, (x, target) in enumerate(train_loader):
             x, target = to_var(x), to_var(target)
 
             x_adv, Kappa = GA_PGD(model, x, target, args['epsilon'], args['alpha'], args['num_k'],
@@ -169,9 +170,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 loss = loss.mul(normalized_reweight).mean()
             else:
                 loss = train_criterion(model(x_adv),target)
-
-
-            ave_loss = ave_loss * 0.9 + loss.item() * 0.1
 
             loss.backward()
             optimizer.step()

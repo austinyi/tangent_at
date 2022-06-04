@@ -51,7 +51,6 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
         ep = np.square(rank / inputs.shape[0]) * epsilon
     elif cri_method == 'tan_random':
         ep = np.random.rand(inputs.shape[0])*epsilon
-        print(ep)
     else:
         raise Exception("No such criterion method combination")
     if rou:

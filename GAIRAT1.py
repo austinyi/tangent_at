@@ -4,6 +4,8 @@ import argparse
 import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
+import torchvision
+from torchvision import transforms
 from tqdm import tqdm
 #import torchvision
 #from torchvision import transforms
@@ -137,9 +139,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
     if use_cuda:
         model = model.cuda()
         #model = torch.nn.DataParallel(model)
-    adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
+
     optimizer = torch.optim.SGD(model.parameters(),lr=args['lr_max'],momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
+
     for epoch in range(args['num_epoch']):
         # training
         ave_loss = 0
@@ -148,7 +151,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         Lambda = adjust_Lambda(epoch + 1)
         #num_data = 0
         #train_robust_loss = 0
-        for idx, x, target in tqdm(train_loader):
+        print(train_loader)
+        for idx, (x, target) in enumerate(train_loader):
             x, target = to_var(x), to_var(target)
 
             x_adv, Kappa = GA_PGD(model, x, target, args['epsilon'], args['alpha'], args['num_k'],
@@ -156,7 +160,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                                          category="Madry", rand_init=True)
 
             model.train()
-            '''
+            lr = lr_schedule(epoch + 1)
+            optimizer.param_groups[0].update(lr=lr)
+            optimizer.zero_grad()
+
             if (epoch + 1) >= args['begin_epoch']:
                 Kappa = Kappa.cuda()
                 loss = train_criterion(model(x_adv),target)
@@ -164,15 +171,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 normalized_reweight = GAIR(args['num_k'], Kappa, Lambda, args['weight_assignment_function'])
                 loss = loss.mul(normalized_reweight).mean()
             else:
-            '''
-            loss = train_criterion(model(x_adv),target)
+                loss = train_criterion(model(x_adv),target)
 
-            ave_loss = ave_loss * 0.9 + loss.item() * 0.1
-
-            model.train()
-            lr = lr_schedule(epoch + 1)
-            optimizer.param_groups[0].update(lr=lr)
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             step += 1
@@ -184,7 +184,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
         # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
     return model
-
 
 
 def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
@@ -214,10 +213,38 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
+def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for data, target in test_loader:
+            data, target = data.cuda(), target.cuda()
+            x_adv, _ = GA_PGD(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
+
+
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = loaddata(args)
+    # Setup data loader
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+
+
+    trainset = torchvision.datasets.CIFAR10(root='/data', train=True, download=True, transform=transform_train)
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True)
+    testset = torchvision.datasets.CIFAR10(root='/data', train=False, download=True, transform=transform_test)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
 
     print('==> Loading model..')
     model = loadmodel(args)
@@ -226,8 +253,9 @@ def main(args):
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
-    testattack(model, test_loader, args, use_cuda=use_cuda)
-
+    _, test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
+    print(test_pgd20_acc)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GAIRAT: Geometry-aware instance-dependent adversarial training')
@@ -256,7 +284,7 @@ if __name__ == "__main__":
     parser.add_argument('--Lambda_max', type=float, default=float('inf'), help='max Lambda')
     parser.add_argument('--Lambda_schedule', default='fixed', choices=['linear', 'piecewise', 'fixed'])
     parser.add_argument('--weight_assignment_function', default='Tanh', choices=['Discrete', 'Sigmoid', 'Tanh'])
-    parser.add_argument('--begin_epoch', type=int, default=50, help='when to use GAIR')
+    parser.add_argument('--begin_epoch', type=int, default=60, help='when to use GAIR')
 
     # parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -279,9 +307,9 @@ if __name__ == "__main__":
         args['batch_size'] = 100
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
-        args['alpha'] = 0.01
+        args['alpha'] = 0.007
         args['num_k'] = 7
-        args['epsilon'] = 8 / 255
+        args['epsilon'] = 0.031 #8 / 255
         args['batch_size'] = 100
         args['print_every'] = 250
     elif args['dataset'] == 'stl10':

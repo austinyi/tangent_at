@@ -253,7 +253,7 @@ def main(args):
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
-    _, test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
     print(test_pgd20_acc)
 

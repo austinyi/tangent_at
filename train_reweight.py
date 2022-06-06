@@ -91,6 +91,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             print('model x_adv is', model(x_adv))
             print('target is', target)
             loss = train_criterion(model(x_adv), target)
+            print(loss)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
 
             model.train()

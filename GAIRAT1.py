@@ -213,6 +213,200 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
+def GA_PGD(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand_init):
+    model.eval()
+    Kappa = torch.zeros(len(data))
+    if category == "Madry":
+        x_adv = data.detach() + torch.from_numpy(np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+    for k in range(num_steps):
+        x_adv.requires_grad_()
+        output = model(x_adv)
+        predict = output.max(1, keepdim=True)[1]
+        # Update Kappa
+        for p in range(len(x_adv)):
+            if predict[p] == target[p]:
+                Kappa[p] += 1
+        model.zero_grad()
+        with torch.enable_grad():
+            if loss_fn == "cent":
+                loss_adv = nn.CrossEntropyLoss(reduction="mean")(output, target)
+        loss_adv.backward()
+        eta = step_size * x_adv.grad.sign()
+        # Update adversarial data
+        x_adv = x_adv.detach() + eta
+        x_adv = torch.min(torch.max(x_adv, data - epsilon), data + epsilon)
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+    x_adv = Variable(x_adv, requires_grad=False)
+    return x_adv, Kappa
+
+
+def perturb3(model, data, target, epsilon, step_size, num_steps, loss_fn, category, rand_init):
+    model.eval()
+    if category == "Madry":
+        x_adv = data.detach() + torch.from_numpy(
+            np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+    for i in range(num_steps):
+        x_adv.requires_grad_()
+        output = model(x_adv)
+
+        model.zero_grad()
+        with torch.enable_grad():
+            if loss_fn == "cent":
+                loss_adv = nn.CrossEntropyLoss(reduction="mean")(output, target)
+
+        loss_adv.backward()
+        eta = step_size * x_adv.grad.sign()
+        # Update adversarial data
+        x_adv = x_adv.detach() + eta
+
+
+        diff = x_adv - data
+
+        diff.clamp_(-epsilon, epsilon)
+
+        x_adv.detach().copy_((diff + data).clamp_(0, 1))
+    return x_adv
+
+def perturb2(model, data, target, epsilon, step_size, num_steps, loss_fn, category, rand_init):
+    model.eval()
+    if category == "Madry":
+        x_adv = data.detach() + torch.from_numpy(
+            np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+    for i in range(num_steps):
+        x_adv.requires_grad_()
+        output = model(x_adv)
+
+        model.zero_grad()
+        with torch.enable_grad():
+            if loss_fn == "cent":
+                loss_adv = nn.CrossEntropyLoss(reduction="mean")(output, target)
+
+        loss_adv.backward()
+        grad = x_adv.grad
+        x_adv += step_size * torch.sign(grad)
+
+        diff = x_adv - data
+
+        diff.clamp_(-epsilon, epsilon)
+
+        x_adv.detach().copy_((diff + data).clamp_(0, 1))
+    return x_adv
+
+
+def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,rand_init):
+    model.eval()
+    if category == "Madry":
+        x_adv = data.detach() + torch.from_numpy(
+            np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+    y_var = to_var(target)
+
+    for i in range(num_steps):
+        x_adv = to_var(x_adv, requires_grad=True)
+
+        scores = model(x_adv)
+        loss = loss_fn(scores, y_var)
+        loss.backward()
+        grad = x_adv.grad
+        x_adv += step_size * torch.sign(grad)
+
+        diff = x_adv - data
+
+        diff.clamp_(-epsilon, epsilon)
+
+        x_adv.detach().copy_((diff + data).clamp_(0, 1))
+    return x_adv
+
+def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,rand_init):
+    model.eval()
+    if torch.cuda.is_available():
+        data, target = data.cuda(), target.cuda()
+
+    rand = torch.Tensor(data.shape).uniform_(-epsilon, epsilon)
+    if torch.cuda.is_available():
+        rand = rand.cuda()
+    x_adv = data + rand
+
+
+    y_var = to_var(target)
+
+    for i in range(num_steps):
+        x_adv = to_var(x_adv, requires_grad=True)
+
+        scores = model(x_adv)
+        loss = loss_fn(scores, y_var)
+        loss.backward()
+        grad = x_adv.grad
+        x_adv += step_size * torch.sign(grad)
+
+        diff = x_adv - data
+
+        diff.clamp_(-epsilon, epsilon)
+        x_adv.detach().copy_((diff + data).clamp_(0, 1))
+    return x_adv
+
+
+def eval_robust0(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv = perturb0(model, data, target, epsilon, step_size, perturb_steps, loss_fn, category,
+                             rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
+
+
+
+def eval_robust1(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv = perturb1(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
+
+def eval_robust2(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv = perturb2(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
+
+def eval_robust3(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv = perturb3(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
+
 def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
     model.eval()
     correct = 0
@@ -225,7 +419,6 @@ def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, 
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_accuracy = correct / len(test_loader.dataset)
     return test_accuracy
-
 
 def main(args):
     use_cuda = torch.cuda.is_available()
@@ -253,9 +446,23 @@ def main(args):
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
+    testattack(model, test_loader, args, use_cuda=use_cuda)
+
     test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
+    test_pgd20_acc0 = eval_robust0(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
+    test_pgd20_acc1 = eval_robust1(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
+    test_pgd20_acc2 = eval_robust2(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
+    test_pgd20_acc3 = eval_robust3(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
     print(test_pgd20_acc)
+    print(test_pgd20_acc0)
+    print(test_pgd20_acc1)
+    print(test_pgd20_acc2)
+    print(test_pgd20_acc3)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GAIRAT: Geometry-aware instance-dependent adversarial training')

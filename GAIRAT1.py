@@ -307,6 +307,8 @@ def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
 
     y_var = to_var(target)
 
+    loss_fn = nn.CrossEntropyLoss()
+
     for i in range(num_steps):
         x_adv = to_var(x_adv, requires_grad=True)
 
@@ -333,7 +335,8 @@ def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         rand = rand.cuda()
     x_adv = data + rand
 
-
+    loss_fn = nn.CrossEntropyLoss()
+    
     y_var = to_var(target)
 
     for i in range(num_steps):

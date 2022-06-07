@@ -288,7 +288,7 @@ def perturb2(model, data, target, epsilon, step_size, num_steps, loss_fn, catego
 
         loss_adv.backward()
         grad = x_adv.grad
-        x_adv = x_adv + step_size * torch.sign(grad)
+        x_adv = x_adv + step_size * grad.sign()
 
         diff = x_adv - data
 
@@ -316,7 +316,7 @@ def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         loss = loss_fn(scores, y_var)
         loss.backward()
         grad = x_adv.grad
-        x_adv = x_adv+ step_size * torch.sign(grad)
+        x_adv = x_adv+ step_size * grad.sign()
 
         diff = x_adv - data
 
@@ -346,7 +346,7 @@ def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         loss = loss_fn(scores, y_var)
         loss.backward()
         grad = x_adv.grad
-        x_adv = x_adv + step_size * torch.sign(grad)
+        x_adv = x_adv + step_size * grad.sign()
 
         diff = x_adv - data
 

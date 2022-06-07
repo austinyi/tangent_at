@@ -270,32 +270,7 @@ def perturb3(model, data, target, epsilon, step_size, num_steps, loss_fn, catego
         x_adv.detach().copy_((diff + data).clamp_(0, 1))
     return x_adv
 
-def perturb2(model, data, target, epsilon, step_size, num_steps, loss_fn, category, rand_init):
-    model.eval()
-    if category == "Madry":
-        x_adv = data.detach() + torch.from_numpy(
-            np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
-        x_adv = torch.clamp(x_adv, 0.0, 1.0)
 
-    for i in range(num_steps):
-        x_adv.requires_grad_()
-        output = model(x_adv)
-
-        model.zero_grad()
-        with torch.enable_grad():
-            if loss_fn == "cent":
-                loss_adv = nn.CrossEntropyLoss(reduction="mean")(output, target)
-
-        loss_adv.backward()
-
-        x_adv = x_adv + step_size * x_adv.grad.sign()
-
-        diff = x_adv - data
-
-        diff.clamp_(-epsilon, epsilon)
-
-        x_adv.detach().copy_((diff + data).clamp_(0, 1))
-    return x_adv
 
 
 def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,rand_init):
@@ -315,7 +290,9 @@ def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         scores = model(x_adv)
         loss = loss_fn(scores, y_var)
         loss.backward()
-        x_adv = x_adv + step_size * x_adv.grad.sign()
+        eta = step_size * x_adv.grad.sign()
+        # Update adversarial data
+        x_adv = x_adv.detach() + eta
 
         diff = x_adv - data
 
@@ -344,7 +321,9 @@ def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         scores = model(x_adv)
         loss = loss_fn(scores, y_var)
         loss.backward()
-        x_adv = x_adv + step_size * x_adv.grad.sign()
+        eta = step_size * x_adv.grad.sign()
+        # Update adversarial data
+        x_adv = x_adv.detach() + eta
 
         diff = x_adv - data
 

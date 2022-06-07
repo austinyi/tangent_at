@@ -288,7 +288,7 @@ def perturb2(model, data, target, epsilon, step_size, num_steps, loss_fn, catego
 
         loss_adv.backward()
         grad = x_adv.grad
-        x_adv += step_size * torch.sign(grad)
+        x_adv = x_adv + step_size * torch.sign(grad)
 
         diff = x_adv - data
 
@@ -316,7 +316,7 @@ def perturb1(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         loss = loss_fn(scores, y_var)
         loss.backward()
         grad = x_adv.grad
-        x_adv += step_size * torch.sign(grad)
+        x_adv = x_adv+ step_size * torch.sign(grad)
 
         diff = x_adv - data
 
@@ -336,7 +336,7 @@ def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
     x_adv = data + rand
 
     loss_fn = nn.CrossEntropyLoss()
-    
+
     y_var = to_var(target)
 
     for i in range(num_steps):
@@ -346,7 +346,7 @@ def perturb0(model, data, target, epsilon,step_size, num_steps,loss_fn,category,
         loss = loss_fn(scores, y_var)
         loss.backward()
         grad = x_adv.grad
-        x_adv += step_size * torch.sign(grad)
+        x_adv = x_adv + step_size * torch.sign(grad)
 
         diff = x_adv - data
 
@@ -453,13 +453,15 @@ def main(args):
 
     test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
-    test_pgd20_acc0 = eval_robust0(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
-                                           loss_fn="cent", category="Madry", random=True)
-    test_pgd20_acc1 = eval_robust1(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+
+
+    test_pgd20_acc3 = eval_robust3(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
     test_pgd20_acc2 = eval_robust2(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
-    test_pgd20_acc3 = eval_robust3(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+    test_pgd20_acc1 = eval_robust1(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+                                           loss_fn="cent", category="Madry", random=True)
+    test_pgd20_acc0 = eval_robust0(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
     print(test_pgd20_acc)
     print(test_pgd20_acc0)

@@ -55,6 +55,12 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
         ep = np.round(ep, precision)
     return ep
 
+def reweightedLoss(logs, targets, ep):
+    out = torch.zeros_like(targets, dtype=torch.float)
+    for i in range(len(targets)):
+        out[i] = logs[i][targets[i]]*ep[i]
+    return -out.sum()/len(out)
+
 
 
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
@@ -69,30 +75,25 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         step = 0
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
-            if args['clean']:
-                x_adv = x
+
+            target_pred = pred_batch(x, model)
+            x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
+
+            if args['criterion'] == 'angle':
+                angles = compute_angle(args, result_dir, idx, x, x_adv)
+                ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
+                            args['precision'], args['round'])
+            elif args['criterion'] == 'tan':
+                components = compute_tangent(args, result_dir, idx, x, x_adv)
+                ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
+                            args['precision'], args['round'])
             else:
-                target_pred = pred_batch(x, model)
-                x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
+                raise Exception("No such criterion")
 
-                if args['criterion'] == 'angle':
-                    angles = compute_angle(args, result_dir, idx, x, x_adv)
-                    ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                                args['precision'], args['round'])
-                elif args['criterion'] == 'tan':
-                    components = compute_tangent(args, result_dir, idx, x, x_adv)
-                    ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                                args['precision'], args['round'])
-                else:
-                    raise Exception("No such criterion")
+            log_softmax = torch.nn.LogSoftmax(dim=1)
+            x_log = log_softmax(model(x_adv))
+            loss = reweightedLoss(x_log, target, ep)
 
-            print('ep is', ep)
-            print('model x_adv is', model(x_adv))
-            print('target is', target)
-            print(target.shape)
-            print(model(x_adv).shape)
-            loss = train_criterion(model(x_adv), target)
-            print(loss)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
 
             model.train()

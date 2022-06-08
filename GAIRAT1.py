@@ -361,19 +361,6 @@ def eval_robust1(model, test_loader, perturb_steps, epsilon, step_size, loss_fn,
     test_accuracy = correct / len(test_loader.dataset)
     return test_accuracy
 
-def eval_robust2(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
-    model.eval()
-    correct = 0
-    with torch.enable_grad():
-        for batch_idx, (data, target) in enumerate(test_loader):
-            data, target = data.cuda(), target.cuda()
-            x_adv = perturb2(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
-            output = model(x_adv)
-            pred = output.max(1, keepdim=True)[1]
-            correct += pred.eq(target.view_as(pred)).sum().item()
-    test_accuracy = correct / len(test_loader.dataset)
-    return test_accuracy
-
 def eval_robust3(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
     model.eval()
     correct = 0
@@ -434,8 +421,7 @@ def main(args):
 
     test_pgd20_acc3 = eval_robust3(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
-    test_pgd20_acc2 = eval_robust2(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
-                                           loss_fn="cent", category="Madry", random=True)
+
     test_pgd20_acc1 = eval_robust1(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
     test_pgd20_acc0 = eval_robust0(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
@@ -443,7 +429,7 @@ def main(args):
     print(test_pgd20_acc)
     print(test_pgd20_acc0)
     print(test_pgd20_acc1)
-    print(test_pgd20_acc2)
+
     print(test_pgd20_acc3)
 
 if __name__ == "__main__":

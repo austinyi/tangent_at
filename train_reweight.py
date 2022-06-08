@@ -73,20 +73,19 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = x
             else:
                 target_pred = pred_batch(x, model)
-                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
+                x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
 
                 if args['criterion'] == 'angle':
-                    angles = compute_angle(args, result_dir, idx, x, x_adv_init)
+                    angles = compute_angle(args, result_dir, idx, x, x_adv)
                     ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
-                    x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':
-                    components = compute_tangent(args, result_dir, idx, x, x_adv_init)
+                    components = compute_tangent(args, result_dir, idx, x, x_adv)
                     ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
-                    x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")
+
             print('ep is', ep)
             print('model x_adv is', model(x_adv))
             print('target is', target)

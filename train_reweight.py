@@ -62,7 +62,6 @@ def reweightedLoss(logs, targets, ep):
     return -out.sum()/len(out)
 
 
-
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()

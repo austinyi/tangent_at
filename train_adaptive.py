@@ -50,7 +50,7 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = np.square(rank / inputs.shape[0]) * epsilon
     elif cri_method == 'angle_num_square':
-        ep = np.sqaure((1 / (inputs * np.max(1 / inputs)))) * epsilon
+        ep = np.square((1 / (inputs * np.max(1 / inputs)))) * epsilon
     elif cri_method == 'tan_num_square':
         ep = np.square(inputs / np.max(inputs)) * epsilon
     else:

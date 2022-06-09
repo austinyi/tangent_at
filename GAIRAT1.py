@@ -415,9 +415,8 @@ def main(args):
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
 
-    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
+    eval_robust(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
-
 
     test_pgd20_acc3 = eval_robust3(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
@@ -426,7 +425,7 @@ def main(args):
                                            loss_fn="cent", category="Madry", random=True)
     test_pgd20_acc0 = eval_robust0(model, test_loader, perturb_steps=7, epsilon=0.031, step_size=0.007,
                                            loss_fn="cent", category="Madry", random=True)
-    print(test_pgd20_acc)
+
     print(test_pgd20_acc0)
     print(test_pgd20_acc1)
 

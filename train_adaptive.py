@@ -171,7 +171,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
-    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
+    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
     parser.add_argument("-n", "--num_epoch", type=int, default=120)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     #parser.add_argument("-l", "--lr", type=float, default=1e-3)

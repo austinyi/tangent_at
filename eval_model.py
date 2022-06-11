@@ -3,8 +3,7 @@ import os
 import torch
 import argparse
 from setup.utils import loaddata, loadmodel
-from setup.setup_pgd_adaptive import LinfPGDAttack, attack_over_test_data
-
+from setup.setup_pgd_adaptive import LinfPGDAttack, attack_over_test_data, GA_PGD
 
 def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
     model.eval()
@@ -32,6 +31,18 @@ def testattack(args, classifier, test_loader, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
+def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv, _ = GA_PGD(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
 
 def main(args):
     use_cuda = torch.cuda.is_available()
@@ -51,7 +62,9 @@ def main(args):
     
         testClassifier(test_loader,model,use_cuda=use_cuda,batch_size=args['batch_size'])
         testattack(args, model, test_loader, use_cuda=use_cuda)
-    
+        test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+                category="Madry", random=True)
+        print(test_pgd20_acc)
 
     
 if __name__ == "__main__":

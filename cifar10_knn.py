@@ -1,11 +1,7 @@
 import os
 import torch
 import argparse
-import math
 import numpy as np
-import torch.nn as nn
-from torch.autograd import Variable
-from tqdm import tqdm
 from setup.utils import loaddata, loadmodel, savefile
 from sklearn.neighbors import KNeighborsClassifier
 import pickle
@@ -65,8 +61,15 @@ def main(args):
     model = loadmodel(args)
 
     print('==> Training KNN starts..')
-    #knn = KNeighborsClassifier(n_neighbors=1)
-    #knn.fit(X, y)
+    knn = KNeighborsClassifier(n_neighbors=1)
+    knn.fit(X_train, a)
+
+    # save the model to disk
+    filename = 'finalized_knn.sav'
+    pickle.dump(knn, open(filename, 'wb'))
+
+    # load the model from disk
+    #loaded_model = pickle.load(open(filename, 'rb'))
 
 
 if __name__ == "__main__":

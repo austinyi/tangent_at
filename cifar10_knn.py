@@ -69,8 +69,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
-    parser.add_argument("-n", "--num_epoch", type=int, default=120)
-    parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -87,7 +85,6 @@ if __name__ == "__main__":
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
 
     args = vars(parser.parse_args())
-    args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
 
     args['alpha'] = 0.01
     args['num_k'] = 7

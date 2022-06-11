@@ -58,9 +58,7 @@ def main(args):
     print(a.shape)
 
     X_train = np.reshape(X_train, (X_train.shape[0], -1))
-
-    print('==> Loading model..')
-    model = loadmodel(args)
+    X_test = np.reshape(X_test, (X_test.shape[0], -1))
 
     print('==> Training KNN starts..')
     knn = KNeighborsClassifier(n_neighbors=1)
@@ -71,7 +69,8 @@ def main(args):
     pickle.dump(knn, open(filename, 'wb'))
 
     # load the model from disk
-    #loaded_model = pickle.load(open(filename, 'rb'))
+    knn = pickle.load(open(filename, 'rb'))
+    knn.predict(X_test[0,])
 
 
 if __name__ == "__main__":

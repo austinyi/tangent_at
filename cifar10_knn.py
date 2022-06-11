@@ -57,6 +57,9 @@ def main(args):
     print(a)
     print(a.shape)
 
+    X_train_reshape = np.reshape(X_train, (X_train.shape[0], -1))
+    print(X_train_reshape.shape)
+
     print('==> Loading model..')
     model = loadmodel(args)
 

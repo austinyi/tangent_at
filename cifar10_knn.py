@@ -70,7 +70,8 @@ def main(args):
 
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
-    knn.predict(X_test[0,])
+    print(X_test[0].shape)
+    knn.predict(X_test[0])
 
 
 if __name__ == "__main__":

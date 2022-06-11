@@ -65,7 +65,7 @@ def main(args):
     knn.fit(X_train, a)
 
     # save the model to disk
-    filename = 'finalized_knn.sav'
+    filename = './models/finalized_knn.sav'
     pickle.dump(knn, open(filename, 'wb'))
 
     # load the model from disk

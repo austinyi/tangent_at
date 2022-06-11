@@ -59,6 +59,7 @@ def main(args):
     print(y_test)
     a = np.arange(start=1, stop=10001, step=1)
     print(a)
+    print(a.shape)
 
     print('==> Loading model..')
     model = loadmodel(args)

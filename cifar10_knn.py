@@ -72,6 +72,7 @@ def main(args):
     knn = pickle.load(open(filename, 'rb'))
     print(X_test[[0],:].shape)
     print(knn.predict(X_test[[0],:]))
+    print(knn.predict(X_test))
 
 
 if __name__ == "__main__":

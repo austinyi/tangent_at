@@ -53,7 +53,7 @@ def main(args):
     print('Test data shape: ', X_test.shape)
     print('Test labels shape: ', y_test.shape)
     print(y_test)
-    a = np.arange(start=1, stop=10001, step=1)
+    a = np.arange(start=1, stop=50001, step=1)
     print(a)
     print(a.shape)
 

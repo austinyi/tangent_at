@@ -162,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
     parser.add_argument("-n", "--num_epoch", type=int, default=120)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    #parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--lr-schedule', default='piecewise',
                         choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
     parser.add_argument('--lr-max', default=0.1, type=float)
@@ -258,5 +258,13 @@ if __name__ == "__main__":
         def lr_schedule(t):
             return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
 
+    # Training settings
+    seed = args['seed']
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
 
     main(args)

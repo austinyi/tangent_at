@@ -40,9 +40,10 @@ def saveA_AA_AAA_train(args, autoencoder, train_loader, result_dir):
 
 def saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir):
     for idx, x in tqdm(test_loader):
-        x, target = to_var(x), to_var(target)
         print(idx)
         print(x)
+        x, target = to_var(x), to_var(target)
+
         #save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
         # save_AAA(args, autoencoder, x, result_dir, idx, k=10)
     return

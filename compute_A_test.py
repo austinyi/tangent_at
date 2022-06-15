@@ -31,14 +31,22 @@ def load_autoencoder(args):
     return autoencoder
 
 
-def saveA_AA_AAA(args, autoencoder, train_loader, result_dir):
+def saveA_AA_AAA_train(args, autoencoder, train_loader, result_dir):
     for idx, x, target in tqdm(train_loader):
         x, target = to_var(x), to_var(target)
         print(idx)
-        #save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
+        save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
         # save_AAA(args, autoencoder, x, result_dir, idx, k=10)
     return
 
+def saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir):
+    for idx, x in tqdm(test_loader):
+        x, target = to_var(x), to_var(target)
+        print(idx)
+        print(x)
+        #save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
+        # save_AAA(args, autoencoder, x, result_dir, idx, k=10)
+    return
 
 def main(args):
     result_dir = args['result_dir']
@@ -50,8 +58,8 @@ def main(args):
     autoencoder = load_autoencoder(args)
 
     print('==> Generating components..')
-    saveA_AA_AAA(args, autoencoder, train_loader, result_dir)
-
+    saveA_AA_AAA_train(args, autoencoder, train_loader, result_dir)
+    saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir)
     return
 
 

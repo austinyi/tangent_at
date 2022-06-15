@@ -41,8 +41,8 @@ def saveA_AA_AAA_train(args, autoencoder, train_loader, result_dir):
     return
 
 def saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir):
-    len(test_loader)
-    len(test_loader.dataset)
+    print(len(test_loader))
+    print(len(test_loader.dataset))
     idx = np.arange(start=1, stop=101, step=1)
     for x, target in tqdm(test_loader):
         x, target = to_var(x), to_var(target)

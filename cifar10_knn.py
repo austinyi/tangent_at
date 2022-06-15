@@ -54,8 +54,6 @@ def main(args):
     print('Test labels shape: ', y_test.shape)
     print(y_test)
     a = np.arange(start=1, stop=50001, step=1)
-    print(a)
-    print(a.shape)
 
     X_train = np.reshape(X_train, (X_train.shape[0], -1))
     X_test = np.reshape(X_test, (X_test.shape[0], -1))

@@ -65,7 +65,7 @@ def main(args):
     model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_adapt_tan_num0.894')))
     if use_cuda:
         model = model.cuda()
-    testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
+
     testattack(model, test_loader, args, use_cuda=use_cuda)
     test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
                 category="Madry", random=True)

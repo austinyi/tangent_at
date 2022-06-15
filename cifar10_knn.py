@@ -72,8 +72,11 @@ def main(args):
     knn = pickle.load(open(filename, 'rb'))
     print(X_test[[0],:].shape)
     print(knn.predict(X_test[[0],:]))
-    print(knn.predict(X_test))
+    predict = knn.predict(X_test)
+    print(predict)
     print(knn.predict(X_train))
+
+    np.save('knn_X_test.npy', predict)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')

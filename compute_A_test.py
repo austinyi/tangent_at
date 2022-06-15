@@ -1,12 +1,14 @@
 import os
 # os.chdir(r'D:\yaoli\tangent')
 import torch
+import numpy as np
 import argparse
 from tqdm import tqdm
 from train_ae import Autoencoder
 from tangent import save_AA, save_AAA
 from setup.utils import loaddata
 from setup.setup_pgd import to_var
+
 
 
 def make_directories(args, result_dir):

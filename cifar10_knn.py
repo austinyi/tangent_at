@@ -76,7 +76,7 @@ def main(args):
     print(predict)
     print(knn.predict(X_train))
 
-    np.save('knn_X_test.npy', predict)
+    np.save('./models/knn_X_test.npy', predict)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')

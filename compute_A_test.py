@@ -44,13 +44,13 @@ def main(args):
     result_dir = args['result_dir']
     make_directories(args, result_dir)
     print('==> Loading data..')
-    _, test_loader = loaddata(args)
+    train_loader, test_loader = loaddata(args)
 
     print('==> Loading model..')
     autoencoder = load_autoencoder(args)
 
     print('==> Generating components..')
-    saveA_AA_AAA(args, autoencoder, test_loader, result_dir)
+    saveA_AA_AAA(args, autoencoder, train_loader, result_dir)
 
     return
 

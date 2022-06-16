@@ -6,7 +6,7 @@ from setup.utils import loaddata, loadmodel, savefile
 from sklearn.neighbors import KNeighborsClassifier
 import pickle
 import platform
-
+from tqdm import tqdm
 
 def load_pickle(f):
     version = platform.python_version_tuple()
@@ -41,14 +41,24 @@ def load_CIFAR10(ROOT):
   Xte, Yte = load_CIFAR_batch(os.path.join(ROOT, 'test_batch'))
   return Xtr, Ytr, Xte, Yte
 
+def load_CIFAR101(train_loader):
+    for idx, x, target in tqdm(train_loader):
+        print(x.shape)
+
+
+
+
+
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
     train_loader, test_loader = loaddata(args)
+    load_CIFAR101(train_loader)
+    '''
     X_train, y_train, X_test, y_test = load_CIFAR10(args['root_cifar'])
 
     # Checking the size of the training and testing data
-    print('Training data shape: ', X_train.shape)
+    print('Training data shape: ', X_train.shape) #(50000, 32, 32, 3)
     print('Training labels shape: ', y_train.shape)
     print('Test data shape: ', X_test.shape)
     print('Test labels shape: ', y_test.shape)
@@ -71,10 +81,11 @@ def main(args):
     print(X_test[[0],:].shape)
     print(knn.predict(X_test[[0],:]))
     predict = knn.predict(X_test)
-    print(predict)
+    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
     #print(knn.predict(X_train))
 
     np.save('./models/knn_X_test.npy', predict)
+    '''
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')

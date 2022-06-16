@@ -52,37 +52,6 @@ def save_AA(args, autoencoder, x, result_dir, idx, k=10):
     return
 
 
-def save_AA_test(args, autoencoder, x, result_dir, idx, k=10):
-    encoded, _ = autoencoder(x)
-    encoded = encoded.detach()
-    m, d = encoded.shape
-
-    PC_dmn = []
-    for i in range(d):
-        X = []
-        for j in range(k):
-            encoded_new = noise_along(encoded, m, i)
-            x_rec = autoencoder.decode(x.shape[0], encoded_new)
-            x_rec = x_rec.view(x_rec.shape[0], -1).detach().cpu().numpy()
-            X.append(x_rec)
-        X = np.stack(X)
-        PCs = []
-        for q in range(m):
-            X_kn = X[:, q, :]
-            pc1 = PCA(n_components=1).fit(X_kn).components_
-            PCs.append(pc1)
-        PCs = np.concatenate(PCs, axis=0)
-        PC_dmn.append(PCs)
-    PC_dmn = np.stack(PC_dmn)
-
-    for i in range(PC_dmn.shape[1]):
-        A = PC_dmn[:, i, :]
-        np.save(os.path.join(result_dir, 'A', args['dataset'], 'test_A_' + str(idx[i].item()) + '.npy'), A)  # d * n
-        AA = np.matmul(A.T, np.linalg.pinv(np.matmul(A, A.T)))
-        np.save(os.path.join(result_dir, 'AA', args['dataset'], 'test_AA_' + str(idx[i].item()) + '.npy'), AA)  # n * d
-    return
-
-
 def save_AAA(args, autoencoder, x, result_dir, idx, k=10):
     encoded, _ = autoencoder(x)
     encoded = encoded.detach()

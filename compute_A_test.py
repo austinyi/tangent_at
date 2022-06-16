@@ -44,7 +44,6 @@ def saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir):
     n = len(test_loader)
     idx = np.arange(start=0, stop=n, step=1)
     for x, target in tqdm(test_loader):
-        print(idx)
         x, target = to_var(x), to_var(target)
         save_AA_test(args, autoencoder, x, result_dir, idx, k=args['k'])
         idx += n

@@ -52,9 +52,9 @@ def load_CIFAR101(train_loader):
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
-        print(X_train.shape)
-        print(idx_train.shape)
-        print(idx_train)
+
+    return X_train, idx_train
+
 
 
 
@@ -64,7 +64,9 @@ def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
     train_loader, test_loader = loaddata(args)
-    load_CIFAR101(train_loader)
+    X_train, y_train = load_CIFAR101(train_loader)
+    X_train = X_train.numpy()
+    y_train = y_train.numpy()
     '''
     X_train, y_train, X_test, y_test = load_CIFAR10(args['root_cifar'])
 
@@ -75,13 +77,13 @@ def main(args):
     print('Test labels shape: ', y_test.shape)
     print(y_test)
     a = np.arange(start=1, stop=50001, step=1)
-
+    '''
     X_train = np.reshape(X_train, (X_train.shape[0], -1))
-    X_test = np.reshape(X_test, (X_test.shape[0], -1))
+    #X_test = np.reshape(X_test, (X_test.shape[0], -1))
 
     print('==> Training KNN starts..')
     knn = KNeighborsClassifier(n_neighbors=1)
-    knn.fit(X_train, a)
+    knn.fit(X_train, y_train)
 
     # save the model to disk
     filename = './models/finalized_knn.sav'
@@ -89,14 +91,15 @@ def main(args):
 
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
-    print(X_test[[0],:].shape)
-    print(knn.predict(X_test[[0],:]))
-    predict = knn.predict(X_test)
+    #print(X_test[[0],:].shape)
+    #print(knn.predict(X_test[[0],:]))
+    predict = knn.predict(X_train)
     print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+    print(y_train)
     #print(knn.predict(X_train))
 
     np.save('./models/knn_X_test.npy', predict)
-    '''
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')

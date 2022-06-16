@@ -44,7 +44,6 @@ def load_CIFAR10(ROOT):
 def load_CIFAR101(train_loader):
     i = 0
     for idx, x, target in tqdm(train_loader):
-        print(idx)
         if i == 0:
             X_train = x
             idx_train = idx
@@ -52,12 +51,7 @@ def load_CIFAR101(train_loader):
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
-
     return X_train, idx_train
-
-
-
-
 
 
 def main(args):

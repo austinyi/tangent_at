@@ -70,7 +70,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10","stl10","tiny"], default="cifar10")   
-    parser.add_argument("--file_list", nargs='+', default=['cifar10_42adv_angle0.814','cifar10_425adv_angle0.82','cifar10_43adv_angle0.82'], help='list of models to test')
+    parser.add_argument("--file_list", nargs='+', evdefault=['cifar10_42adv_angle0.814','cifar10_425adv_angle0.82','cifar10_43adv_angle0.82'], help='list of models to test')
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')

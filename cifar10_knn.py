@@ -72,7 +72,7 @@ def main(args):
     print(knn.predict(X_test[[0],:]))
     predict = knn.predict(X_test)
     print(predict)
-    print(knn.predict(X_train))
+    #print(knn.predict(X_train))
 
     np.save('./models/knn_X_test.npy', predict)
 

@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 from tqdm import tqdm
 from train_ae import Autoencoder
-from tangent import save_AA, save_AAA
+from tangent import save_AA, save_AA_test, save_AAA
 from setup.utils import loaddata
 from setup.setup_pgd import to_var
 
@@ -45,9 +45,8 @@ def saveA_AA_AAA_test(args, autoencoder, test_loader, result_dir):
     idx = np.arange(start=1, stop=n+1, step=1)
     for x, target in tqdm(test_loader):
         x, target = to_var(x), to_var(target)
-        #save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
+        save_AA_test(args, autoencoder, x, result_dir, idx, k=args['k'])
         idx += n
-        print(idx)
         # save_AAA(args, autoencoder, x, result_dir, idx, k=10)
     return
 

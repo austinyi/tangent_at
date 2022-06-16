@@ -155,7 +155,7 @@ def attack_over_test_data(model, adversary, param, loader_test, use_cuda=True, o
     pbar = tqdm(loader_test)
     for X, y in pbar:
         y_pred = pred_batch(X, model)
-        X_adv = adversary.perturb(X, y_pred)
+        X_adv = adversary.perturb(X, y)
 
         y_pred_adv = pred_batch(X_adv, model)
         ntested += y.size()[0]

@@ -69,12 +69,12 @@ def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
 
         angles = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
         print(corr_idx)
-        print(not corr_idx)
+        print(np.invert(corr_idx))
         print(angles)
         print(angles[corr_idx])
-        print(angles[not corr_idx])
+        print(angles[np.invert(corr_idx)])
         print(np.mean(angles[corr_idx]))
-        print(np.mean(angles[not corr_idx]))
+        print(np.mean(angles[np.invert(corr_idx)]))
 
         ntested += y.size()[0]
         total_correct += (y_pred_adv.numpy() == y.numpy()).sum()

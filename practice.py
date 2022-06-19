@@ -15,14 +15,13 @@ from setup.setup_wrn import wrn
 from numpy import linalg as LA
 
 
-def distance(x_adv, X_train, use_cuda=True):
-
+def distance(x_adv, X_train):
     X_train = X_train.reshape(50000,-1)
     X_train = X_train.cpu().numpy()
     x_adv = x_adv.reshape(1,-1)
     dist = []
     for i in range(50000):
-        np.append(dist, LA.norm(X_train[i,:] - x_adv[0]))
+        dist = np.append(dist, LA.norm(X_train[i,:] - x_adv[0]))
     return dist
 
 
@@ -45,6 +44,7 @@ def check(classifier, train_loader, test_loader, args, use_cuda=True):
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
 
         predict_idx = knn.predict(X_adv_knn)
+        print(X_adv_knn[[0]])
 
         dist = distance(X_adv_knn[[0]], X_train)
         print(dist)

@@ -44,8 +44,13 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         predict_idx = []
         for i in range(100):
             dist = distance(X_adv_knn[[i]], X_train)
+            print(np.min(dist))
             idx = np.argmin(dist)
+            print(dist[idx])
+            print(idx)
             predict_idx = np.append(predict_idx, idx)
+
+        print(predict_idx)
 
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()

@@ -32,6 +32,7 @@ def load_autoencoder(args):
 
 def saveA_AA_AAA(args, autoencoder, train_loader, result_dir):
     for idx, x, target in tqdm(train_loader):
+        print(idx)
         x, target = to_var(x), to_var(target)
         save_AA(args, autoencoder, x, result_dir, idx, k=args['k'])
         #save_AAA(args, autoencoder, x, result_dir, idx, k=10)

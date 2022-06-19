@@ -41,21 +41,16 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
-def detect_angle(classifier, test_loader, args, use_cuda=True):
+def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
+    X_train, y_train = load_CIFAR10(train_loader)
 
     filename = './models/finalized_knn.sav'
 
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
 
-    #print(X_test[[0],:].shape)
-    #print(knn.predict(X_test[[0],:]))
-    #predict = knn.predict(X_train)
-    #print(predict) # [47189 42769 21299 ... 13253 17940 29497]
-    #print(y_train)
-    #print(knn.predict(X_train))
 
     total_correct = 0
     total_samples = len(test_loader.dataset)
@@ -66,10 +61,13 @@ def detect_angle(classifier, test_loader, args, use_cuda=True):
         X_adv = adversary.perturb(X, y)
         X_adv_knn = X_adv.cpu().numpy()
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
-        print(knn.predict(X_adv_knn))
-        print(knn.predict(X_adv_knn).shape)
-        y_pred_adv = pred_batch(X_adv, classifier)
+        predict_idx = knn.predict(X_adv_knn)
 
+        y_pred_adv = pred_batch(X_adv, classifier)
+        print(y_pred_adv.numpy() == y.numpy())
+
+        angles = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
+        print(angles)
         ntested += y.size()[0]
         total_correct += (y_pred_adv.numpy() == y.numpy()).sum()
         pbar.set_postfix(adv_acc="{0}/{1} {2:-6.2f}%".format(total_correct, ntested,
@@ -96,6 +94,18 @@ def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, 
     test_accuracy = correct / len(test_loader.dataset)
     return test_accuracy
 
+def load_CIFAR10(train_loader):
+    i = 0
+    for idx, x, target in tqdm(train_loader):
+        if i == 0:
+            X_train = x
+            idx_train = idx
+            i += 1
+        else:
+            X_train = torch.cat([X_train, x], axis=0)
+            idx_train = torch.cat([idx_train, idx], axis=0)
+    return X_train, idx_train
+
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
@@ -109,7 +119,7 @@ def main(args):
     if use_cuda:
         model = model.cuda()
 
-    detect_angle(model, test_loader, args, use_cuda=use_cuda)
+    detect_angle(model, train_loader, test_loader, args, use_cuda=use_cuda)
     #testattack(model, test_loader, args, use_cuda=use_cuda)
     #test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
     #            category="Madry", random=True)

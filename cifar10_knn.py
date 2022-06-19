@@ -65,22 +65,14 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
-    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
-    parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
-    parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
-    parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--root", default=r'/data', help='the directory that contains the project folder')
     parser.add_argument("--root_data", default=r'/', help='the dir that contains the data folder')
-    parser.add_argument("--root_cifar", default=r'/data/cifar-10-batches-py',help='the dir that contains the data folder')
-    parser.add_argument("--result_dir", default=r'/data/tangent', help='the working directory that contains AA, AAA')
-    parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
+    #parser.add_argument("--root_cifar", default=r'/data/cifar-10-batches-py',help='the dir that contains the data folder')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=False,
                         help="shuffle in training or not")
-    parser.add_argument('--depth', type=int, default=32, help='WRN depth')
-    parser.add_argument('--width', type=int, default=10, help='WRN width factor')
 
     args = vars(parser.parse_args())
 

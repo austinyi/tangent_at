@@ -4,3 +4,4 @@ __pycache__/
 .idea/
 models/.DS_Store
 models/cifar10/
+models/

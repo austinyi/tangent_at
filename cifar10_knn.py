@@ -22,7 +22,6 @@ def load_CIFAR10(train_loader):
     return X_train, idx_train
 
 def main(args):
-    use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
     train_loader, test_loader = loaddata(args)
     X_train, y_train = load_CIFAR10(train_loader)

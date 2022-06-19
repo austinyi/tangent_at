@@ -5,7 +5,6 @@ import torch
 import argparse
 import math
 import numpy as np
-import torch.nn as nn
 from torch.autograd import Variable
 from tqdm import tqdm
 import pickle
@@ -48,14 +47,12 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     if use_cuda:
         X_train = X_train.cuda()
 
-    filename = './models/finalized_knn.sav'
-
     # load the model from disk
+    filename = './models/finalized_knn.sav'
     knn = pickle.load(open(filename, 'rb'))
 
     correct_angle = []
     wrong_angle = []
-
     correct_tangent = []
     wrong_tangent = []
 
@@ -64,7 +61,11 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         X_adv = adversary.perturb(X, y)
         X_adv_knn = X_adv.cpu().numpy()
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
+        print(X_adv_knn.shape)
         predict_idx = knn.predict(X_adv_knn)
+        print(predict_idx)
+        print(X_train[predict_idx].shape)
+        print(X_adv.shape)
 
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()

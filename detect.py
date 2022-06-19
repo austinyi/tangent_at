@@ -41,22 +41,26 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
-def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
+def detect_angle(classifier, train_loader, test_loader, args):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _ = load_CIFAR10(train_loader)
-    X_train = X_train.cuda()
+    if torch.cuda.is_available():
+        X_train = X_train.cuda()
 
     filename = './models/finalized_knn.sav'
 
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
 
+    correct = []
+    wrong = []
 
+    '''
     total_correct = 0
     total_samples = len(test_loader.dataset)
     ntested = 0
-
+    '''
     pbar = tqdm(test_loader)
     for X, y in pbar:
         X_adv = adversary.perturb(X, y)
@@ -68,25 +72,29 @@ def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
         corr_idx = y_pred_adv.numpy() == y.numpy()
 
         angles = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
-        print(corr_idx)
-        print(np.invert(corr_idx))
-        print(angles)
-        print(angles[corr_idx])
-        print(angles[np.invert(corr_idx)])
-        print(np.mean(angles[corr_idx]))
-        print(np.mean(angles[np.invert(corr_idx)]))
+        #print(corr_idx)
+        #print(np.invert(corr_idx))
+        #print(angles)
 
+        correct = np.append(correct, angles[corr_idx])
+        wrong = np.append(wrong, angles[np.invert(corr_idx)])
+
+        #print(np.mean(angles[corr_idx]))
+        #print(np.mean(angles[np.invert(corr_idx)]))
+
+        '''
         ntested += y.size()[0]
         total_correct += (y_pred_adv.numpy() == y.numpy()).sum()
         pbar.set_postfix(adv_acc="{0}/{1} {2:-6.2f}%".format(total_correct, ntested,
                                                              total_correct*100.0/ntested),
                          refresh=False)
+        '''
     pbar.close()
-    acc = total_correct/total_samples
-    print('Got %d/%d correct (%.2f%%) on the perturbed data'
-        % (total_correct, total_samples, 100 * acc))
 
-    return correct_angle, wrong_angle
+    np.save('./models/correct.npy', correct)
+    np.save('./models/wrong.npy', wrong)
+
+    #return correct_angle, wrong_angle
 
 
 def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):

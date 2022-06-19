@@ -65,12 +65,17 @@ def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
         predict_idx = knn.predict(X_adv_knn)
 
         y_pred_adv = pred_batch(X_adv, classifier)
-        print(y_pred_adv.numpy() == y.numpy())
-        print(X_train[predict_idx])
-        print(X_adv)
+        corr_idx = y_pred_adv.numpy() == y.numpy()
 
         angles = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
+        print(corr_idx)
+        print(not corr_idx)
         print(angles)
+        print(angles[corr_idx])
+        print(angles[not corr_idx])
+        print(np.mean(angles[corr_idx]))
+        print(np.mean(angles[not corr_idx]))
+
         ntested += y.size()[0]
         total_correct += (y_pred_adv.numpy() == y.numpy()).sum()
         pbar.set_postfix(adv_acc="{0}/{1} {2:-6.2f}%".format(total_correct, ntested,

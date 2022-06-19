@@ -41,11 +41,11 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
-def detect_angle(classifier, train_loader, test_loader, args):
+def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _ = load_CIFAR10(train_loader)
-    if torch.cuda.is_available():
+    if use_cuda:
         X_train = X_train.cuda()
 
     filename = './models/finalized_knn.sav'
@@ -53,8 +53,8 @@ def detect_angle(classifier, train_loader, test_loader, args):
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
 
-    correct = []
-    wrong = []
+    correct_angle = []
+    wrong_angle = []
 
     '''
     total_correct = 0
@@ -76,8 +76,8 @@ def detect_angle(classifier, train_loader, test_loader, args):
         #print(np.invert(corr_idx))
         #print(angles)
 
-        correct = np.append(correct, angles[corr_idx])
-        wrong = np.append(wrong, angles[np.invert(corr_idx)])
+        correct_angle = np.append(correct_angle, angles[corr_idx])
+        wrong_angle = np.append(wrong_angle, angles[np.invert(corr_idx)])
 
         #print(np.mean(angles[corr_idx]))
         #print(np.mean(angles[np.invert(corr_idx)]))
@@ -91,8 +91,8 @@ def detect_angle(classifier, train_loader, test_loader, args):
         '''
     pbar.close()
 
-    np.save('./models/correct.npy', correct)
-    np.save('./models/wrong.npy', wrong)
+    np.save('./models/correct.npy', correct_angle)
+    np.save('./models/wrong.npy', wrong_angle)
 
     #return correct_angle, wrong_angle
 

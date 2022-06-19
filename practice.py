@@ -23,6 +23,7 @@ def distance(x_adv, X_train, use_cuda=True):
     dist = []
     for i in range(50000):
         np.append(dist, LA.norm(X_train[i,:] - x_adv[0]))
+    return dist
 
 
 def check(classifier, train_loader, test_loader, args, use_cuda=True):
@@ -46,6 +47,7 @@ def check(classifier, train_loader, test_loader, args, use_cuda=True):
         predict_idx = knn.predict(X_adv_knn)
 
         dist = distance(X_adv_knn[[0]], X_train)
+        print(dist)
         print(np.mean(dist))
         print(np.median(dist))
         print(np.amin(dist))

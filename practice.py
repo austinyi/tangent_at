@@ -13,7 +13,7 @@ from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
 from setup.setup_wrn import wrn
 from numpy import linalg as LA
-
+from scipy.stats import rankdata
 
 def distance(x_adv, X_train):
     X_train = X_train.reshape(50000,-1)
@@ -52,6 +52,10 @@ def check(classifier, train_loader, test_loader, args, use_cuda=True):
         print(np.median(dist))
         print(np.amin(dist))
         print(dist[predict_idx[0]])
+
+        rank = rankdata(dist)
+        print(rank[predict_idx[0]])
+        print(dist.shape)
 
     pbar.close()
 

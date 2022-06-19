@@ -8,6 +8,7 @@ import numpy as np
 import torch.nn as nn
 from torch.autograd import Variable
 from tqdm import tqdm
+import pickle
 from tangent import compute_angle, compute_tangent
 from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
@@ -40,6 +41,46 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
+def detect_angle(classifier, test_loader, args, use_cuda=True):
+    classifier.eval()
+    adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
+
+    filename = './models/finalized_knn.sav'
+
+    # load the model from disk
+    knn = pickle.load(open(filename, 'rb'))
+
+    #print(X_test[[0],:].shape)
+    #print(knn.predict(X_test[[0],:]))
+    #predict = knn.predict(X_train)
+    #print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+    #print(y_train)
+    #print(knn.predict(X_train))
+
+    total_correct = 0
+    total_samples = len(test_loader.dataset)
+    ntested = 0
+
+    pbar = tqdm(test_loader)
+    for X, y in pbar:
+        X_adv = adversary.perturb(X, y)
+        print(knn.predict(X_adv))
+        print(knn.predict(X_adv).shape)
+        y_pred_adv = pred_batch(X_adv, classifier)
+
+        ntested += y.size()[0]
+        total_correct += (y_pred_adv.numpy() == y.numpy()).sum()
+        pbar.set_postfix(adv_acc="{0}/{1} {2:-6.2f}%".format(total_correct, ntested,
+                                                             total_correct*100.0/ntested),
+                         refresh=False)
+    pbar.close()
+    acc = total_correct/total_samples
+    print('Got %d/%d correct (%.2f%%) on the perturbed data'
+        % (total_correct, total_samples, 100 * acc))
+
+    return correct_angle, wrong_angle
+
+
 def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
     model.eval()
     correct = 0
@@ -66,10 +107,11 @@ def main(args):
     if use_cuda:
         model = model.cuda()
 
-    testattack(model, test_loader, args, use_cuda=use_cuda)
-    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
-                category="Madry", random=True)
-    print(test_pgd20_acc)
+    detect_angle(model, test_loader, args, use_cuda=use_cuda)
+    #testattack(model, test_loader, args, use_cuda=use_cuda)
+    #test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+    #            category="Madry", random=True)
+    #print(test_pgd20_acc)
 
 
 

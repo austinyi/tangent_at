@@ -18,6 +18,7 @@ from numpy import linalg as LA
 def distance(x_adv, X_train, use_cuda=True):
 
     X_train = X_train.reshape(50000,-1)
+    X_train = X_train.cpu().numpy()
     x_adv = x_adv.reshape(1,-1)
     dist = []
     for i in range(50000):

@@ -64,8 +64,10 @@ def detect_angle(classifier, test_loader, args, use_cuda=True):
     pbar = tqdm(test_loader)
     for X, y in pbar:
         X_adv = adversary.perturb(X, y)
-        print(knn.predict(X_adv.cpu().numpy()))
-        print(knn.predict(X_adv.cpu().numpy()).shape)
+        X_adv_knn = X_adv.cpu().numpy()
+        X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
+        print(knn.predict(X_adv_knn))
+        print(knn.predict(X_adv_knn).shape)
         y_pred_adv = pred_batch(X_adv, classifier)
 
         ntested += y.size()[0]

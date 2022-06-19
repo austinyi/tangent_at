@@ -44,7 +44,8 @@ def testattack(classifier, test_loader, args, use_cuda=True):
 def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    X_train, y_train = load_CIFAR10(train_loader)
+    X_train, _ = load_CIFAR10(train_loader)
+    X_train = X_train.cuda()
 
     filename = './models/finalized_knn.sav'
 

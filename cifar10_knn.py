@@ -9,7 +9,7 @@ import platform
 from tqdm import tqdm
 
 
-def load_CIFAR101(train_loader):
+def load_CIFAR10(train_loader):
     i = 0
     for idx, x, target in tqdm(train_loader):
         if i == 0:
@@ -25,7 +25,7 @@ def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
     train_loader, test_loader = loaddata(args)
-    X_train, y_train = load_CIFAR101(train_loader)
+    X_train, y_train = load_CIFAR10(train_loader)
     X_train = X_train.numpy()
     y_train = y_train.numpy()
     '''

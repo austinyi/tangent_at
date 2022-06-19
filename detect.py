@@ -41,7 +41,7 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
-def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
+def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _ = load_CIFAR10(train_loader)
@@ -56,39 +56,6 @@ def detect_angle(classifier, train_loader, test_loader, args, use_cuda=True):
     correct_angle = []
     wrong_angle = []
 
-    pbar = tqdm(test_loader)
-    for X, y in pbar:
-        X_adv = adversary.perturb(X, y)
-        X_adv_knn = X_adv.cpu().numpy()
-        X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
-        predict_idx = knn.predict(X_adv_knn)
-
-        y_pred_adv = pred_batch(X_adv, classifier)
-        corr_idx = y_pred_adv.numpy() == y.numpy()
-
-        angles = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
-
-        correct_angle = np.append(correct_angle, angles[corr_idx])
-        wrong_angle = np.append(wrong_angle, angles[np.invert(corr_idx)])
-
-    pbar.close()
-
-    np.save('./correct_angle.npy', correct_angle)
-    np.save('./wrong_angle.npy', wrong_angle)
-
-
-def detect_tangent(classifier, train_loader, test_loader, args, use_cuda=True):
-    classifier.eval()
-    adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    X_train, _ = load_CIFAR10(train_loader)
-    if use_cuda:
-        X_train = X_train.cuda()
-
-    filename = './models/finalized_knn.sav'
-
-    # load the model from disk
-    knn = pickle.load(open(filename, 'rb'))
-
     correct_tangent = []
     wrong_tangent = []
 
@@ -102,13 +69,17 @@ def detect_tangent(classifier, train_loader, test_loader, args, use_cuda=True):
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()
 
+        angle = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
         tangent = compute_tangent(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
 
+        correct_angle = np.append(correct_angle, angle[corr_idx])
+        wrong_angle = np.append(wrong_angle, angle[np.invert(corr_idx)])
         correct_tangent = np.append(correct_tangent, tangent[corr_idx])
         wrong_tangent = np.append(wrong_tangent, tangent[np.invert(corr_idx)])
-
     pbar.close()
 
+    np.save('./correct_angle.npy', correct_angle)
+    np.save('./wrong_angle.npy', wrong_angle)
     np.save('./correct_tangent.npy', correct_tangent)
     np.save('./wrong_tangent.npy', wrong_tangent)
 
@@ -151,8 +122,7 @@ def main(args):
     if use_cuda:
         model = model.cuda()
 
-    detect_angle(model, train_loader, test_loader, args, use_cuda=use_cuda)
-    detect_tangent(model, train_loader, test_loader, args, use_cuda=use_cuda)
+    detect_angle_tangent(model, train_loader, test_loader, args, use_cuda=use_cuda)
     #testattack(model, test_loader, args, use_cuda=use_cuda)
     #test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
     #            category="Madry", random=True)

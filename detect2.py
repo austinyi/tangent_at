@@ -57,7 +57,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     wrong_tangent = []
 
     pbar = tqdm(train_loader)
-    for X, y in pbar:
+    for idx, X, y in pbar:
         X_adv = adversary.perturb(X, y)
         X_adv_knn = X_adv.cpu().numpy()
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))

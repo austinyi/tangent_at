@@ -106,6 +106,7 @@ if __name__ == "__main__":
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=False,
                         help="shuffle in training or not")
+    parser.add_argument('--seed', type=int, default=0, metavar='S', help='random seed')
 
     args = vars(parser.parse_args())
 
@@ -114,5 +115,14 @@ if __name__ == "__main__":
     args['epsilon'] = 8 / 255
     args['batch_size'] = 100
     args['print_every'] = 250
+
+    seed = args['seed']
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
+
     print(args)
     main(args)

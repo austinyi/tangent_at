@@ -44,11 +44,11 @@ def main(args):
 
     print('==> Training KNN starts..')
     knn = KNeighborsClassifier(n_neighbors=1)
-    #knn.fit(X_train, y_train)
+    knn.fit(X_train, y_train)
 
     # save the model to disk
     filename = './models/finalized_knn.sav'
-    #pickle.dump(knn, open(filename, 'wb'))
+    pickle.dump(knn, open(filename, 'wb'))
 
 
     # load the model from disk

@@ -20,6 +20,7 @@ def load_CIFAR10(train_loader):
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
+    i=0
     for idx, x, target in tqdm(train_loader):
         if i == 0:
             print(x[0])

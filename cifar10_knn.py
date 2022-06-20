@@ -67,7 +67,7 @@ def main(args):
         print(X_train[i].shape)
         rand = np.random.uniform(-0.031, 0.031, size = X_train[i].shape)
         X_noise = X_train[i] + rand
-        X_knn = X_noise.cpu().numpy()
+        X_knn = X_noise
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
         predict_idx1 = knn.predict(X_knn)
         print(predict_idx1)

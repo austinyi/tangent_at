@@ -65,7 +65,7 @@ def main(args):
     #np.save('./models/knn_X_test.npy', predict)
     for i in range(50000):
         print(X_train[i].shape)
-        rand = np.random.uniform_(-0.031, 0.031, size = X_train[i].shape)
+        rand = np.random.uniform(-0.031, 0.031, size = X_train[i].shape)
         X_noise = X_train[i] + rand
         X_knn = X_noise.cpu().numpy()
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))

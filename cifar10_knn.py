@@ -20,16 +20,6 @@ def load_CIFAR10(train_loader):
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
-    i=0
-    for idx, x, target in tqdm(train_loader):
-        if i == 0:
-            print(x[0])
-            X_train = x
-            idx_train = idx
-            i += 1
-        else:
-            X_train = torch.cat([X_train, x], axis=0)
-            idx_train = torch.cat([idx_train, idx], axis=0)
     return X_train, idx_train
 
 def main(args):
@@ -73,7 +63,16 @@ def main(args):
     #print(knn.predict(X_train))
 
     #np.save('./models/knn_X_test.npy', predict)
+    for i in range(50000):
+        print(X_train[i].shape)
+        rand = np.random.uniform_(-0.031, 0.031, size = X_train[i].shape)
+        X_noise = X_train[i] + rand
+        X_knn = X_noise.cpu().numpy()
+        X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
+        predict_idx1 = knn.predict(X_knn)
+        print(predict_idx1)
 
+    '''
     for idx, X, y in tqdm(train_loader):
         print(X[0])
         print(idx)
@@ -81,7 +80,7 @@ def main(args):
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
         predict_idx1 = knn.predict(X_knn)
         print(predict_idx1)
-        '''
+     
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()
 

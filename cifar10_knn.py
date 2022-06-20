@@ -20,6 +20,15 @@ def load_CIFAR10(train_loader):
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
+    for idx, x, target in tqdm(train_loader):
+        if i == 0:
+            print(x[0])
+            X_train = x
+            idx_train = idx
+            i += 1
+        else:
+            X_train = torch.cat([X_train, x], axis=0)
+            idx_train = torch.cat([idx_train, idx], axis=0)
     return X_train, idx_train
 
 def main(args):
@@ -63,8 +72,8 @@ def main(args):
     #print(knn.predict(X_train))
 
     #np.save('./models/knn_X_test.npy', predict)
-    pbar = tqdm(train_loader)
-    for idx, X, y in pbar:
+
+    for idx, X, y in tqdm(train_loader):
         print(X[0])
         print(idx)
         X_knn = X.cpu().numpy()
@@ -83,7 +92,7 @@ def main(args):
         correct_tangent = np.append(correct_tangent, tangent[corr_idx])
         wrong_tangent = np.append(wrong_tangent, tangent[np.invert(corr_idx)])
         '''
-    pbar.close()
+
 
 
 if __name__ == "__main__":

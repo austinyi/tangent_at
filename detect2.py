@@ -58,12 +58,15 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
 
     pbar = tqdm(train_loader)
     for idx, X, y in pbar:
+        print(idx)
         X_adv = adversary.perturb(X, y)
         X_adv_knn = X_adv.cpu().numpy()
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
         print(X_adv_knn.shape)
         predict_idx = knn.predict(X_adv_knn)
+        predict_idx1 = knn.predict(X)
         print(predict_idx)
+        print(predict_idx1)
         print(X_train[predict_idx].shape)
         print(X_adv.shape)
         '''

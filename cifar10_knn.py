@@ -12,8 +12,8 @@ from tqdm import tqdm
 def load_CIFAR10(train_loader):
     i = 0
     for idx, x, target in tqdm(train_loader):
-        print(x[0])
         if i == 0:
+            print(x[0])
             X_train = x
             idx_train = idx
             i += 1

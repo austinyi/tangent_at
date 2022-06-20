@@ -43,11 +43,11 @@ def main(args):
 
     print('==> Training KNN starts..')
     knn = KNeighborsClassifier(n_neighbors=1)
-    knn.fit(X_train, y_train)
+    #knn.fit(X_train, y_train)
 
     # save the model to disk
     filename = './models/finalized_knn.sav'
-    pickle.dump(knn, open(filename, 'wb'))
+    #pickle.dump(knn, open(filename, 'wb'))
 
 
     # load the model from disk
@@ -56,12 +56,14 @@ def main(args):
     #print(knn.predict(X_test[[0],:]))
     predict = knn.predict(X_train)
     print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+    print(X_train[0])
     #print(y_train)
     #print(knn.predict(X_train))
 
     #np.save('./models/knn_X_test.npy', predict)
     pbar = tqdm(train_loader)
     for idx, X, y in pbar:
+        print(X[0])
         print(idx)
         X_knn = X.cpu().numpy()
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))

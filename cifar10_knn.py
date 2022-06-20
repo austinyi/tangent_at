@@ -49,12 +49,13 @@ def main(args):
     filename = './models/finalized_knn.sav'
     pickle.dump(knn, open(filename, 'wb'))
 
+
     # load the model from disk
-    #knn = pickle.load(open(filename, 'rb'))
+    knn = pickle.load(open(filename, 'rb'))
     #print(X_test[[0],:].shape)
     #print(knn.predict(X_test[[0],:]))
-    #predict = knn.predict(X_train)
-    #print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+    predict = knn.predict(X_train)
+    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
     #print(y_train)
     #print(knn.predict(X_train))
 

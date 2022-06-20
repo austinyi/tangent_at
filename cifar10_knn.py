@@ -38,6 +38,7 @@ def main(args):
     print(y_test)
     a = np.arange(start=1, stop=50001, step=1)
     '''
+    print(X_train[0])
     X_train = np.reshape(X_train, (X_train.shape[0], -1))
     #X_test = np.reshape(X_test, (X_test.shape[0], -1))
 
@@ -56,7 +57,7 @@ def main(args):
     #print(knn.predict(X_test[[0],:]))
     predict = knn.predict(X_train)
     print(predict) # [47189 42769 21299 ... 13253 17940 29497]
-    print(X_train[0])
+
     #print(y_train)
     #print(knn.predict(X_train))
 

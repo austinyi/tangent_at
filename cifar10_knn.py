@@ -60,6 +60,26 @@ def main(args):
     #print(knn.predict(X_train))
 
     #np.save('./models/knn_X_test.npy', predict)
+    pbar = tqdm(train_loader)
+    for idx, X, y in pbar:
+        print(idx)
+        X_knn = X.cpu().numpy()
+        X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
+        predict_idx1 = knn.predict(X_knn)
+        print(predict_idx1)
+        '''
+        y_pred_adv = pred_batch(X_adv, classifier)
+        corr_idx = y_pred_adv.numpy() == y.numpy()
+
+        angle = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
+        tangent = compute_tangent(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
+
+        correct_angle = np.append(correct_angle, angle[corr_idx])
+        wrong_angle = np.append(wrong_angle, angle[np.invert(corr_idx)])
+        correct_tangent = np.append(correct_tangent, tangent[corr_idx])
+        wrong_tangent = np.append(wrong_tangent, tangent[np.invert(corr_idx)])
+        '''
+    pbar.close()
 
 
 if __name__ == "__main__":

@@ -93,15 +93,15 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 y = 1 / (1 + np.exp(-1/2*z)) * (1+np.exp(-1/2))
                 y1 = np.power(z,3)
                 y2 = np.power(z, 2.5)
-                print(y1)
-                print(y2)
+                print(1-y1)
+                print(1-y2)
 
                 components = compute_tangent(args, result_dir, idx, x, x_adv_init)
                 #print(components)
                 ep = get_ep(components, args['train_epsilon'], 'tan', 'num', args['exp'],
                             args['threshold'], args['train_ratio'],
                             args['precision'], args['round'])
-                print(ep/0.031)
+                print(1-ep/0.031)
                 '''
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)

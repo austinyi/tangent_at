@@ -107,7 +107,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")
-                '''
+                
 
             loss = train_criterion(model(x_adv), target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
@@ -122,6 +122,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             if (step + 1) % args['print_every'] == 0:
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
+                      '''
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
         # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])

@@ -10,6 +10,8 @@ from tqdm import tqdm
 from tangent import compute_angle, compute_tangent
 from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
+from scipy.special import expit
+
 
 
 def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, precision=3, rou=True):
@@ -87,13 +89,14 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 ep = get_ep(angles, args['train_epsilon'], 'angle', 'num', args['exp'],
                             args['threshold'], args['train_ratio'],
                             args['precision'], args['round'])
-                print(ep)
+                print(ep/0.031)
+
                 components = compute_tangent(args, result_dir, idx, x, x_adv_init)
                 #print(components)
                 ep = get_ep(components, args['train_epsilon'], 'tan', 'num', args['exp'],
                             args['threshold'], args['train_ratio'],
                             args['precision'], args['round'])
-                print(ep)
+                print(ep/0.031)
                 '''
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)

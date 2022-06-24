@@ -90,7 +90,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                             args['threshold'], args['train_ratio'],
                             args['precision'], args['round'])
                 x= ep/0.031
-                y = 1 / (1 + np.exp(-2x))
+                y = 1 / (1 + np.exp(-2*x))
                 print(y)
 
                 components = compute_tangent(args, result_dir, idx, x, x_adv_init)

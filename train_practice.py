@@ -2,17 +2,17 @@ import os
 # os.chdir(r'D:\yaoli\tangent')
 import torch
 import argparse
+import math
 import numpy as np
-import time
 import torch.nn as nn
 from torch.autograd import Variable
 from tqdm import tqdm
 from tangent import compute_angle, compute_tangent
 from setup.utils import loaddata, loadmodel, savefile
-from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data
+from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
 
 
-def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
+def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, precision=3, rou=True):
     cri_method = criterion + '_' + method
     if cri_method == 'angle_num':
         ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
@@ -25,6 +25,34 @@ def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
+    elif cri_method == 'angle_skip':
+        ep = np.zeros(inputs.size)
+        ep[inputs < threshold*math.pi] = epsilon
+    elif cri_method == 'tan_skip':
+        ep = np.zeros(inputs.size)
+        ep[inputs > threshold] = epsilon
+    elif cri_method == 'angle_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1
+        cri = int(inputs.size*ratio)
+        ep[rank >= cri] = epsilon
+    elif cri_method == 'tan_rank_binary':
+        ep = np.zeros(inputs.size)
+        rank = np.argsort(np.argsort(inputs)) + 1
+        cri = int(inputs.size * ratio)
+        ep[rank >= cri] = epsilon
+    elif cri_method == 'angle_rank_exp':
+        rank = np.argsort(
+            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
+        ep = np.power(rank / inputs.shape[0], exp) * epsilon
+    elif cri_method == 'tan_rank_exp':
+        rank = np.argsort(np.argsort(inputs)) + 1
+        ep = np.power(rank / inputs.shape[0], exp) * epsilon
+    elif cri_method == 'angle_num_exp':
+        ep = np.power((1 / (inputs * np.max(1 / inputs))), exp) * epsilon
+    elif cri_method == 'tan_num_exp':
+        ep = np.power(inputs / np.max(inputs), exp) * epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -32,87 +60,69 @@ def get_ep(inputs, epsilon, criterion, method, precision=3, rou=True):
     return ep
 
 
+
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()
     adversary = LinfPGDAttack(epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr'], momentum=0.9, weight_decay=args['weight_decay'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=args['lr_max'], momentum=0.9, weight_decay=args['weight_decay'])
     train_criterion = nn.CrossEntropyLoss()
-
-    angle_epoch = []
     for epoch in range(args['num_epoch']):
         # training
         ave_loss = 0
         step = 0
-        angle_batch = []
         for idx, x, target in tqdm(train_loader):
-            start0 = time.time()
-
             x, target = to_var(x), to_var(target)
             if args['clean']:
                 x_adv = x
+            elif args['standard']:
+                target_pred = pred_batch(x, model)
+                x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
             else:
                 target_pred = pred_batch(x, model)
-                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary) # 좀 차이남
+                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
 
+                angles = compute_angle(args, result_dir, idx, x, x_adv_init)
+                ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
+                            args['threshold'], args['train_ratio'],
+                            args['precision'], args['round'])
+                print(ep)
+                components = compute_tangent(args, result_dir, idx, x, x_adv_init)
+                ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
+                            args['threshold'], args['train_ratio'],
+                            args['precision'], args['round'])
+                print(ep)
+                '''
                 if args['criterion'] == 'angle':
-                    #end = time.time()
-                    #print("1:", end - start)
-                    #start = time.time()
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
-                    angle_batch.append(np.mean(angles))
-                    #print(angle)
-                    #end = time.time()
-                    #print("1:", end - start)
-                    #start = time.time()
-                    ep = get_ep(angles, args['epsilon'], args['criterion'], args['method'], args['precision'],
-                                args['round'])
-                    #end = time.time()
-                    #print("1:", end - start)
-                    start = time.time()
+                    ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
+                                args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
-                    end = time.time()
-                    print("1:", end - start)
-                    #start = time.time()
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
-                    ep = get_ep(components, args['epsilon'], args['criterion'], args['method'], args['precision'],
-                                args['round'])
+                    ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
+                                args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 else:
                     raise Exception("No such criterion")
-
-            end0 = time.time()
-            print("The time of generating adversarial example:", end0 - start0)
-
-            #start = time.time()
+                '''
 
             loss = train_criterion(model(x_adv), target)
-
-            #end = time.time()
-            #print("The time of forward passing:", end - start)
-
-            #start = time.time()
-
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
+
+            model.train()
+            lr = lr_schedule(epoch + 1)
+            optimizer.param_groups[0].update(lr=lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             step += 1
-
-            #end = time.time()
-            #print("The time of backward passing:", end - start)
             if (step + 1) % args['print_every'] == 0:
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
-
-        angle_epoch.append(np.mean(np.mean(angle_batch)))
-        print(angle_epoch)
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
-        #savefile(args['file_name'] + str(round(acc, 3)), model, args['dataset'])
-
-    print(angle_epoch)
+        # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
     return model
 
 
@@ -143,6 +153,18 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
+def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+    model.eval()
+    correct = 0
+    with torch.enable_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            x_adv, _ = GA_PGD(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            output = model(x_adv)
+            pred = output.max(1, keepdim=True)[1]
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    test_accuracy = correct / len(test_loader.dataset)
+    return test_accuracy
 
 def main(args):
     use_cuda = torch.cuda.is_available()
@@ -157,17 +179,24 @@ def main(args):
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
-
+    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+                category="Madry", random=True)
+    print(test_pgd20_acc)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
-    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
-    parser.add_argument("-n", "--num_epoch", type=int, default=100)
+    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
+    parser.add_argument("-n", "--num_epoch", type=int, default=120)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
+    parser.add_argument('--lr-schedule', default='piecewise',
+                        choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
+    parser.add_argument('--lr-max', default=0.1, type=float)
+    parser.add_argument('--lr-one-drop', default=0.01, type=float)
+    parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_exp','num_exp'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
@@ -176,12 +205,17 @@ if __name__ == "__main__":
     parser.add_argument("--root_data", default=r'/', help='the dir that contains the data folder')
     parser.add_argument("--result_dir", default=r'/data/tangent', help='the working directory that contains AA, AAA')
     parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
+    parser.add_argument("--standard", action="store_true", default=False, help='if true, standard adversarial training')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=True,
                         help="shuffle in training or not")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')
+    parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
+    parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
+    parser.add_argument('--train_epsilon', type=float, default=0.031, help='adaptive train ratio')
+    parser.add_argument('--exp', type=float, default=2, help='criterion exponent')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
     if args['dataset'] == 'mnist':
@@ -192,7 +226,7 @@ if __name__ == "__main__":
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
         args['alpha'] = 0.01
-        args['num_k'] = 10
+        args['num_k'] = 7
         args['epsilon'] = 8 / 255
         args['batch_size'] = 100
         args['print_every'] = 250
@@ -212,4 +246,53 @@ if __name__ == "__main__":
     else:
         print('invalid dataset')
     print(args)
+
+    # Learning schedules
+    if args['lr_schedule'] == 'superconverge':
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] * 2 // 5, args['num_epoch']], [0, args['lr_max'], 0])[0]
+    elif args['lr_schedule'] == 'piecewise':
+        def lr_schedule(t):
+            if args['num_epoch'] >= 110:
+                # Train Wide-ResNet
+                if t / args['num_epoch'] < 0.5:
+                    return args['lr_max']
+                elif t / args['num_epoch'] < 0.75:
+                    return args['lr_max'] / 10.
+                elif t / args['num_epoch'] < (11 / 12):
+                    return args['lr_max'] / 100.
+                else:
+                    return args['lr_max'] / 200.
+            else:
+                # Train ResNet
+                if t / args['num_epoch'] < 0.3:
+                    return args['lr_max']
+                elif t / args['num_epoch'] < 0.6:
+                    return args['lr_max'] / 10.
+                else:
+                    return args['lr_max'] / 100.
+    elif args['lr_schedule'] == 'linear':
+        lr_schedule = lambda t: np.interp([t], [0, args['num_epoch'] // 3, args['num_epoch'] * 2 // 3, args['num_epoch']],
+                                          [args['lr_max'], args['lr_max'], args['lr_max'] / 10, args['lr_max'] / 100])[0]
+    elif args['lr_schedule'] == 'onedrop':
+        def lr_schedule(t):
+            if t < args['lr_drop_epoch']:
+                return args['lr_max']
+            else:
+                return args['lr_one_drop']
+    elif args['lr_schedule'] == 'multipledecay':
+        def lr_schedule(t):
+            return args['lr_max'] - (t // (args['num_epoch'] // 10)) * (args['lr_max'] / 10)
+    elif args['lr_schedule'] == 'cosine':
+        def lr_schedule(t):
+            return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
+
+    # Training settings
+    seed = args['seed']
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
+
     main(args)

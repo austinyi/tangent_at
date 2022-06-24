@@ -106,7 +106,7 @@ if __name__ == "__main__":
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=False,
                         help="shuffle in training or not")
-    parser.add_argument('--seed', type=int, default=0, metavar='S', help='random seed')
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
 
     args = vars(parser.parse_args())
 

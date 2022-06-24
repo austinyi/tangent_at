@@ -177,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
     parser.add_argument("-n", "--num_epoch", type=int, default=120)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    parser.add_argument('--seed', type=int, default=0, metavar='S', help='random seed')
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--lr-schedule', default='piecewise',
                         choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
     parser.add_argument('--lr-max', default=0.1, type=float)

@@ -93,8 +93,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 y = 1 / (1 + np.exp(-1/2*z)) * (1+np.exp(-1/2))
                 y1 = np.power(z,3)
                 y2 = np.power(z, 2.5)
-                print(1-y1)
-                print(1-y2)
+                y3 = 1-24*np.power(z,3)
+                #print(1-y1)
+                #print(1-y2)
+                print(y3)
 
                 components = compute_tangent(args, result_dir, idx, x, x_adv_init)
                 #print(components)

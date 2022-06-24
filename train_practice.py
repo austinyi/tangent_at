@@ -94,10 +94,12 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 y1 = np.power(z,3)
                 y2 = np.power(z, 2.5)
                 y3 = 1-24*np.power((1-z)/24,3)
-                y4 = np.power(z,3.5)
-                y5 = np.power(z,4)
+                y4 = np.power(z,4)
+                y5 = np.power(z,4.5)
+                y6 = np.power(z, 5)
                 print(y4)
                 print(y5)
+                print(y6)
 
                 #print(1-y1)
                 #print(1-y2)
@@ -110,8 +112,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                             args['precision'], args['round'])
                 print(ep/0.031)
 
-                print(1-np.power(1-z,0.5))
-                print(1 - ep / 0.031)
+                #print(1-np.power(1-z,0.5))
+                #print(1 - ep / 0.031)
                 '''
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)

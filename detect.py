@@ -51,10 +51,10 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     filename = './models/finalized_knn.sav'
     knn = pickle.load(open(filename, 'rb'))
 
-    correct_angle = []
-    wrong_angle = []
-    correct_tangent = []
-    wrong_tangent = []
+    natural_angle = []
+    adv_angle = []
+    natural_tangent = []
+    adv_tangent = []
 
     pbar = tqdm(test_loader)
     for X, y in pbar:

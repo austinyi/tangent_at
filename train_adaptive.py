@@ -109,8 +109,11 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
-        print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
-        # savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
+        print("Epoch {} test accuracy: {:.3f}".format(epoch, acc)
+
+    if args['save']:
+        savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
+        
     return model
 
 
@@ -194,6 +197,7 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir", default=r'/data/tangent', help='the working directory that contains AA, AAA')
     parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
     parser.add_argument("--standard", action="store_true", default=False, help='if true, standard adversarial training')
+    parser.add_argument("--save", action="store_true", default=False, help='if true, save the trained model')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=True,

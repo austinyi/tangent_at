@@ -2,12 +2,26 @@ import os
 import torch
 import argparse
 import numpy as np
-from setup.utils import loaddata, loadmodel, savefile
+from setup.utils import savefile
 from sklearn.neighbors import KNeighborsClassifier
 import pickle
 import platform
 from tqdm import tqdm
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+from setup.setup_loader import CIFAR10
 
+def loaddata(args):
+    transform_train = transforms.Compose([transforms.ToTensor(),])
+    trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                       train=True, download=False, transform=transform_train)  # return index as well
+    train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])
+    transform_test = transforms.Compose([transforms.ToTensor()])
+    testset = datasets.CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                               train=False, download=False, transform=transform_test)
+    test_loader = DataLoader(testset, batch_size=args['batch_size'], shuffle=False)
+
+    return train_loader, test_loader
 
 def load_CIFAR10(train_loader):
     i = 0
@@ -51,7 +65,6 @@ def main(args):
     filename = './models/finalized_knn.sav'
     pickle.dump(knn, open(filename, 'wb'))
 
-
     # load the model from disk
     knn = pickle.load(open(filename, 'rb'))
     #print(X_test[[0],:].shape)
@@ -91,7 +104,7 @@ def main(args):
         wrong_angle = np.append(wrong_angle, angle[np.invert(corr_idx)])
         correct_tangent = np.append(correct_tangent, tangent[corr_idx])
         wrong_tangent = np.append(wrong_tangent, tangent[np.invert(corr_idx)])
-        '''
+    '''
 
 
 

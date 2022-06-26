@@ -51,38 +51,45 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     filename = './models/finalized_knn.sav'
     knn = pickle.load(open(filename, 'rb'))
 
-    natural_angle = []
-    adv_angle = []
-    natural_tangent = []
-    adv_tangent = []
+    natural_angles = []
+    adv_angles = []
+    natural_tangents = []
+    adv_tangents = []
 
     pbar = tqdm(test_loader)
     for X, y in pbar:
         X_adv = adversary.perturb(X, y)
         X_adv_knn = X_adv.cpu().numpy()
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
-        print(X_adv_knn.shape)
-        predict_idx = knn.predict(X_adv_knn)
-        print(predict_idx)
-        print(X_train[predict_idx].shape)
-        print(X_adv.shape)
+        #print(X_adv_knn.shape)
+        adv_idx = knn.predict(X_adv_knn)
 
-        y_pred_adv = pred_batch(X_adv, classifier)
-        corr_idx = y_pred_adv.numpy() == y.numpy()
+        X_knn = X.cpu().numpy()
+        X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
+        #print(X_adv_knn.shape)
+        natural_idx = knn.predict(X_knn)
+        #print(predict_idx)
+        #print(X_train[predict_idx].shape)
+        #print(X_adv.shape)
 
-        angle = compute_angle(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
-        tangent = compute_tangent(args, args['result_dir'], predict_idx, X_train[predict_idx], X_adv)
+        #y_pred_adv = pred_batch(X_adv, classifier)
+        #corr_idx = y_pred_adv.numpy() == y.numpy()
 
-        correct_angle = np.append(correct_angle, angle[corr_idx])
-        wrong_angle = np.append(wrong_angle, angle[np.invert(corr_idx)])
-        correct_tangent = np.append(correct_tangent, tangent[corr_idx])
-        wrong_tangent = np.append(wrong_tangent, tangent[np.invert(corr_idx)])
+        adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
+        adv_tangent = compute_tangent(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
+        natural_angle = compute_angle(args, args['result_dir'], natural_idx, X_train[natural_idx], X)
+        natural_tangent = compute_tangent(args, args['result_dir'], natural_idx, X_train[natural_idx], X)
+
+        natural_angles = np.append(natural_angles, natural_angle)
+        adv_angles = np.append(adv_angles, adv_angle)
+        natural_tangents = np.append(natural_tangents, natural_tangent)
+        adv_tangents = np.append(adv_tangents, adv_tangent)
     pbar.close()
 
-    np.save('./correct_angle.npy', correct_angle)
-    np.save('./wrong_angle.npy', wrong_angle)
-    np.save('./correct_tangent.npy', correct_tangent)
-    np.save('./wrong_tangent.npy', wrong_tangent)
+    np.save('./natural_angles.npy', natural_angles)
+    np.save('./adv_angles.npy', adv_angles)
+    np.save('./natural_tangents.npy', natural_tangents)
+    np.save('./adv_tangents.npy', adv_tangents)
 
 
 def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):

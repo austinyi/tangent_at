@@ -27,7 +27,6 @@ def load_CIFAR10(train_loader):
     i = 0
     for idx, x, target in tqdm(train_loader):
         if i == 0:
-            print(x[0])
             X_train = x
             idx_train = idx
             i += 1
@@ -53,7 +52,7 @@ def main(args):
     print(y_test)
     a = np.arange(start=1, stop=50001, step=1)
     '''
-    print(X_train[0])
+    #print(X_train[0])
     X_train = np.reshape(X_train, (X_train.shape[0], -1))
     #X_test = np.reshape(X_test, (X_test.shape[0], -1))
 
@@ -76,6 +75,7 @@ def main(args):
     #print(knn.predict(X_train))
 
     #np.save('./models/knn_X_test.npy', predict)
+    '''
     for i in range(50000):
         X = np.reshape(X_train[i], (1,3072))
         rand = np.random.uniform(-0.031, 0.031, size = (1,3072))
@@ -85,7 +85,7 @@ def main(args):
         predict_idx1 = knn.predict(X_knn)
         print(predict_idx1)
 
-    '''
+
     for idx, X, y in tqdm(train_loader):
         print(X[0])
         print(idx)

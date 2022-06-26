@@ -109,11 +109,9 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
-        print("Epoch {} test accuracy: {:.3f}".format(epoch, acc)
-
+        print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
     if args['save']:
-        savefile(args['file_name']+str(round(acc,3)), model, args['dataset'])
-        
+        savefile(args['file_name'] + str(round(acc, 3)), model, args['dataset'])
     return model
 
 

@@ -63,6 +63,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
         #print(X_adv_knn.shape)
         adv_idx = knn.predict(X_adv_knn)
+        print(adv_idx)
 
         if torch.cuda.is_available():
             X = X.cuda()
@@ -70,6 +71,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
         #print(X_adv_knn.shape)
         natural_idx = knn.predict(X_knn)
+        print(natural_idx)
         #print(predict_idx)
         #print(X_train[predict_idx].shape)
         #print(X_adv.shape)

@@ -189,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
-    parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument("--weight_decay", type=float, default=2e-4)
     parser.add_argument("--root", default=r'/data', help='the directory that contains the project folder')
     parser.add_argument("--root_data", default=r'/', help='the dir that contains the data folder')
     parser.add_argument("--result_dir", default=r'/data/tangent', help='the working directory that contains AA, AAA')
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         args['batch_size'] = 100
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
-        args['alpha'] = 0.01
+        args['alpha'] = 2 / 255
         args['num_k'] = 7
         args['epsilon'] = 8 / 255
         args['batch_size'] = 100

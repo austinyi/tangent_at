@@ -91,7 +91,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
                     print(ep)
-                    ep[target != target_pred] = 0
+                    print(target.cpu() != target_pred.cpu())
+                    ep[target.cpu() != target_pred.cpu()] = 0
                     print(ep)
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':

@@ -80,9 +80,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
             else:
                 target_pred = pred_batch(x, model)
-
-                output = model(x)
-                target_pred = output.max(1, keepdim=True)[1]
+                if use_cuda:
+                    target_pred = target_pred.cuda()
                 print(target_pred)
                 print(target)
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)

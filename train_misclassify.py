@@ -80,10 +80,10 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
             else:
                 target_pred = pred_batch(x, model)
-                if use_cuda:
-                    target_pred = target_pred.cuda()
-                print(target_pred)
-                print(target)
+                #if use_cuda:
+                #    target_pred = target_pred.cuda()
+                #print(target_pred)
+                #print(target)
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
 
                 if args['criterion'] == 'angle':
@@ -91,8 +91,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                     ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
                     print(ep)
-                    print(target.cpu() != target_pred.cpu())
-                    ep[target.cpu() != target_pred.cpu()] = 0
+                    print(target.cpu() != target_pred)
+                    ep[target.cpu() != target_pred] = 0
                     print(ep)
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':

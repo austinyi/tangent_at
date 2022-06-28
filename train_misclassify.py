@@ -81,7 +81,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             else:
                 target_pred = pred_batch(x, model)
 
-                output = model(x_adv)
+                output = model(x)
                 target_pred = output.max(1, keepdim=True)[1]
                 print(target_pred)
                 print(target)

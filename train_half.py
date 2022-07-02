@@ -16,21 +16,6 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
     cri_method = criterion + '_' + method
     if cri_method == 'angle_num':
         ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
-    elif cri_method == 'tan_num':
-        ep = inputs / np.max(inputs) * epsilon
-    elif cri_method == 'angle_rank':
-        rank = np.argsort(
-            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
-        ep = rank / inputs.shape[0] * epsilon
-    elif cri_method == 'tan_rank':
-        rank = np.argsort(np.argsort(inputs)) + 1
-        ep = rank / inputs.shape[0] * epsilon
-    elif cri_method == 'angle_skip':
-        ep = np.zeros(inputs.size)
-        ep[inputs < threshold*math.pi] = epsilon
-    elif cri_method == 'tan_skip':
-        ep = np.zeros(inputs.size)
-        ep[inputs > threshold] = epsilon
     elif cri_method == 'angle_rank_binary':
         ep = np.zeros(inputs.size)
         rank = np.argsort(
@@ -42,42 +27,24 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
         rank = np.argsort(np.argsort(inputs)) + 1
         cri = int(inputs.size * ratio)
         ep[rank >= cri] = epsilon
-    elif cri_method == 'angle_rank_exp':
+    elif cri_method == 'angle_rank_binary2':
+        ep = np.zeros(inputs.size)
         rank = np.argsort(
-            np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
-        ep = np.power(rank / inputs.shape[0], exp) * epsilon
-    elif cri_method == 'tan_rank_exp':
+            np.argsort(1 / inputs)) + 1
+        cri = int(inputs.size * ratio)
+        ep[rank < cri] = epsilon
+    elif cri_method == 'tan_rank_binary2':
+        ep = np.zeros(inputs.size)
         rank = np.argsort(np.argsort(inputs)) + 1
-        ep = np.power(rank / inputs.shape[0], exp) * epsilon
-    elif cri_method == 'angle_num_exp':
-        ep = np.power((1 / (inputs * np.max(1 / inputs))), exp) * epsilon
-    elif cri_method == 'tan_num_exp':
-        ep = np.power(inputs / np.max(inputs), exp) * epsilon
+        cri = int(inputs.size * ratio)
+        ep[rank < cri] = epsilon
     else:
         raise Exception("No such criterion method combination")
     if rou:
         ep = np.round(ep, precision)
     return ep
 
-def compute_angle1(args, result_dir, idx, x, x_adv):
-    m = x.shape[0]
-    x = x.reshape(m,-1)
-    x_adv = x_adv.reshape(m,-1)
-    Angles = []
-    for i in range(len(idx)):
-        z = x_adv[i,:]-x[i,:] # n by 1
-        AA = torch.tensor(np.load(os.path.join(result_dir,'AA',args['dataset'],'AA_'+str(idx[i].item())+'.npy'))).cuda() #AA: A(A^TA)^-1, n by d
-        nominator_part1 = torch.matmul(AA.T,z) # (A^TA)^{-1}A^T(x^a-x) --> d * 1
-        A = torch.tensor(np.load(os.path.join(result_dir,'A',args['dataset'],'A_'+str(idx[i].item())+'.npy'))).cuda() #A: A^T, d by n
-        nominator_part2 = torch.matmul(A,z) # A^T(x^a-x) --> d * 1
-        nominator = torch.matmul(nominator_part1.T, nominator_part2)
-        denom = torch.matmul(z.T,z)
-        value = torch.sqrt(nominator/denom)
-        print(value)
-        angle = np.arccos(np.clip(value.item(),-1,1))
-        print(angle)
-        Angles.append(angle)
-    return np.array(Angles)
+
 
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
@@ -101,7 +68,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
 
                 if args['criterion'] == 'angle':
-                    angles = compute_angle1(args, result_dir, idx, x, x_adv_init)
+                    angles = compute_angle(args, result_dir, idx, x, x_adv_init)
                     ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
@@ -186,9 +153,9 @@ def main(args):
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
-    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
-                category="Madry", random=True)
-    print(test_pgd20_acc)
+    #test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+    #            category="Madry", random=True)
+    #print(test_pgd20_acc)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
@@ -203,7 +170,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr-one-drop', default=0.01, type=float)
     parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_exp','num_exp'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_binary2','rank_exp','num_exp'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')

@@ -102,8 +102,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             new_diff = []
             for j in range(ep.shape[0]):
                 new_diff.append(torch.clamp(diff[j], -ep[j], ep[j]))
-                new_diff = torch.stack(new_diff)
-                diff = new_diff
+            new_diff = torch.stack(new_diff)
+            diff = new_diff
 
             x_adv = (diff + x).clamp_(0, 1)
             print(x_adv)

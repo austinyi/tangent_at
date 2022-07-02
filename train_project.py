@@ -95,8 +95,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 else:
                     raise Exception("No such criterion")
 
-            print(x_adv_init.shape)
-            print(x.shape)
             diff = x_adv_init - x
 
             new_diff = []
@@ -104,10 +102,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 new_diff.append(torch.clamp(diff[j], -ep[j], ep[j]))
             new_diff = torch.stack(new_diff)
             diff = new_diff
-
             x_adv = (diff + x).clamp_(0, 1)
-            print(x_adv)
-            print(x_adv.shape)
 
             loss = train_criterion(model(x_adv), target)
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1

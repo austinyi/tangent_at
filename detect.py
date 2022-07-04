@@ -43,7 +43,7 @@ def testattack(classifier, test_loader, args, use_cuda=True):
 def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    X_train, y_train = load_CIFAR10(train_loader)
+    X_train, _, y_train = load_CIFAR10(train_loader)
     if use_cuda:
         X_train, y_train = X_train.cuda(), y_train.cuda()
 
@@ -84,7 +84,6 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         print(y_pred_adv.numpy())
         print(y_train[adv_idx])
 
-
         adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
         adv_tangent = compute_tangent(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
         natural_angle = compute_angle(args, args['result_dir'], natural_idx, X_train[natural_idx], X)
@@ -121,11 +120,13 @@ def load_CIFAR10(train_loader):
         if i == 0:
             X_train = x
             idx_train = idx
+            target_train = target
             i += 1
         else:
             X_train = torch.cat([X_train, x], axis=0)
             idx_train = torch.cat([idx_train, idx], axis=0)
-    return X_train, idx_train
+            target_train = torch.cat([target_train, target], axis=0)
+    return X_train, idx_train, target_train
 
 def main(args):
     use_cuda = torch.cuda.is_available()

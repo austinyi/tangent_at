@@ -74,20 +74,12 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _, y_train = load_CIFAR10(train_loader)
 
-    X_train1 = X_train.numpy()
-    print(X_train1[0])
-    X_train1 = np.reshape(X_train1, (X_train1.shape[0], -1))
+    if use_cuda:
+        X_train, y_train = X_train.cuda(), y_train.cuda()
 
     # load the model from disk
     filename = './models/finalized_knn.sav'
     knn = pickle.load(open(filename, 'rb'))
-
-    predict = knn.predict(X_train1)
-
-    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
-
-    if use_cuda:
-        X_train, y_train = X_train.cuda(), y_train.cuda()
 
     natural_angles = []
     adv_angles = []
@@ -116,11 +108,13 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
 
         print(y_train[natural_idx])
         print(y)
+        print((y.numpy() == y_train[natural_idx].numpy()).sum())
 
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()
-        print(y_pred_adv.numpy())
+        print(y_pred_adv)
         print(y_train[adv_idx])
+        print((y_pred_adv.numpy() == y_train[adv_idx].numpy()).sum())
 
         adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
         adv_tangent = compute_tangent(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)

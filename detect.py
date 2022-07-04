@@ -77,9 +77,10 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         #print(X_adv.shape)
 
         y_pred_adv = pred_batch(X_adv, classifier)
-        #corr_idx = y_pred_adv.numpy() == y.numpy()
+        corr_idx = y_pred_adv.numpy() == y.numpy()
         print(y.numpy())
         print(y_pred_adv.numpy())
+        print(corr_idx.sum())
 
 
         adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)

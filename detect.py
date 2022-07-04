@@ -43,9 +43,9 @@ def testattack(classifier, test_loader, args, use_cuda=True):
 def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=True):
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
-    X_train, _ = load_CIFAR10(train_loader)
+    X_train, y_train = load_CIFAR10(train_loader)
     if use_cuda:
-        X_train = X_train.cuda()
+        X_train, y_train = X_train.cuda(), y_train.cuda()
 
     # load the model from disk
     filename = './models/finalized_knn.sav'
@@ -76,11 +76,13 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         #print(X_train[predict_idx].shape)
         #print(X_adv.shape)
 
+        print(y_train[natural_idx])
+        print(y)
+
         y_pred_adv = pred_batch(X_adv, classifier)
         corr_idx = y_pred_adv.numpy() == y.numpy()
-        print(y.numpy())
         print(y_pred_adv.numpy())
-        print(corr_idx.sum())
+        print(y_train[adv_idx])
 
 
         adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)

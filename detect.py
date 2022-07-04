@@ -18,7 +18,7 @@ from setup.setup_loader import CIFAR10
 
 
 def loaddata_without_transform(args):
-    transform_train = transforms.Compose([transforms.ToTensor(),])
+    transform_train = transforms.Compose([transforms.ToTensor()])
     trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
                        train=True, download=False, transform=transform_train)  # return index as well
     train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument("--standard", action="store_true", default=False, help='if true, standard adversarial training')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
-    parser.add_argument("--train_shuffle", action="store_false", default=True,
+    parser.add_argument("--train_shuffle", action="store_false", default=False,
                         help="shuffle in training or not")
     parser.add_argument('--depth', type=int, default=32, help='WRN depth')
     parser.add_argument('--width', type=int, default=10, help='WRN width factor')

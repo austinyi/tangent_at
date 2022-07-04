@@ -12,7 +12,7 @@ from torchvision import datasets, transforms
 from setup.setup_loader import CIFAR10
 
 def loaddata_without_transform(args):
-    transform_train = transforms.Compose([transforms.ToTensor(),])
+    transform_train = transforms.Compose([transforms.ToTensor()])
     trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
                        train=True, download=False, transform=transform_train)  # return index as well
     train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])

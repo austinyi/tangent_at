@@ -106,14 +106,14 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         #print(X_train[predict_idx].shape)
         #print(X_adv.shape)
 
-        print(y_train[natural_idx])
-        print(y)
-        print((y.cpu().numpy() == y_train[natural_idx].cpu().numpy()).sum())
+        #print(y_train[natural_idx])
+        #print(y)
+        #print((y.cpu().numpy() == y_train[natural_idx].cpu().numpy()).sum())
 
-        y_pred_adv = pred_batch(X_adv, classifier)
-        print(y_pred_adv)
-        print(y_train[adv_idx])
-        print((y_pred_adv.cpu().numpy() == y_train[adv_idx].cpu().numpy()).sum())
+        #y_pred_adv = pred_batch(X_adv, classifier)
+        #print(y_pred_adv)
+        #print(y_train[adv_idx])
+        #print((y_pred_adv.cpu().numpy() == y_train[adv_idx].cpu().numpy()).sum())
 
         adv_angle = compute_angle(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)
         adv_tangent = compute_tangent(args, args['result_dir'], adv_idx, X_train[adv_idx], X_adv)

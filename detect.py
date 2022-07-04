@@ -56,6 +56,9 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     natural_tangents = []
     adv_tangents = []
 
+    predict = knn.predict(X_train)
+    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+
     pbar = tqdm(test_loader)
     for X, y in pbar:
         X_adv = adversary.perturb(X, y)

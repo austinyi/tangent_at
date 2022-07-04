@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn as nn
 import torch
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
 import argparse
 import math
 import numpy as np
@@ -12,7 +14,20 @@ from tangent import compute_angle, compute_tangent
 from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
 from setup.setup_wrn import wrn
+from setup.setup_loader import CIFAR10
 
+
+def loaddata_without_transform(args):
+    transform_train = transforms.Compose([transforms.ToTensor(),])
+    trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                       train=True, download=False, transform=transform_train)  # return index as well
+    train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])
+    transform_test = transforms.Compose([transforms.ToTensor()])
+    testset = datasets.CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                               train=False, download=False, transform=transform_test)
+    test_loader = DataLoader(testset, batch_size=args['batch_size'], shuffle=False)
+
+    return train_loader, test_loader
 
 def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
     model.eval()
@@ -44,20 +59,25 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     classifier.eval()
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _, y_train = load_CIFAR10(train_loader)
-    if use_cuda:
-        X_train, y_train = X_train.cuda(), y_train.cuda()
+
+
+    X_train1 = X_train.numpy()
+    X_train1 = np.reshape(X_train1, (X_train1.shape[0], -1))
 
     # load the model from disk
     filename = './models/finalized_knn.sav'
     knn = pickle.load(open(filename, 'rb'))
 
+    predict = knn.predict(X_train1)
+    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
+
+    if use_cuda:
+        X_train, y_train = X_train.cuda(), y_train.cuda()
+
     natural_angles = []
     adv_angles = []
     natural_tangents = []
     adv_tangents = []
-
-    predict = knn.predict(X_train)
-    print(predict) # [47189 42769 21299 ... 13253 17940 29497]
 
     pbar = tqdm(test_loader)
     for X, y in pbar:
@@ -134,7 +154,7 @@ def load_CIFAR10(train_loader):
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = loaddata(args)
+    train_loader, test_loader = loaddata_without_transform(args)
 
     depth = args['depth']
     width = args['width']

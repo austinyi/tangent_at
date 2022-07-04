@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from setup.setup_loader import CIFAR10
 
-def loaddata(args):
+def loaddata_without_transform(args):
     transform_train = transforms.Compose([transforms.ToTensor(),])
     trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
                        train=True, download=False, transform=transform_train)  # return index as well
@@ -37,7 +37,7 @@ def load_CIFAR10(train_loader):
 
 def main(args):
     print('==> Loading data..')
-    train_loader, test_loader = loaddata(args)
+    train_loader, test_loader = loaddata_without_transform(args)
     X_train, y_train = load_CIFAR10(train_loader)
     X_train = X_train.numpy()
     y_train = y_train.numpy()

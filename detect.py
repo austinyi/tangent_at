@@ -130,7 +130,7 @@ def main(args):
     width = args['width']
     model = wrn(depth=depth, num_classes=10, widen_factor=width, dropRate=0)
 
-    model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_adapt_tan_num0.894')))
+    model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_adapt_tan_num0.892')))
     if use_cuda:
         model = model.cuda()
 

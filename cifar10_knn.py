@@ -41,6 +41,8 @@ def main(args):
     X_train, y_train = load_CIFAR10(train_loader)
     X_train = X_train.numpy()
     y_train = y_train.numpy()
+
+    print(X_train[0])
     '''
     X_train, y_train, X_test, y_test = load_CIFAR10(args['root_cifar'])
 

@@ -29,6 +29,20 @@ def loaddata_without_transform(args):
 
     return train_loader, test_loader
 
+def load_CIFAR10(train_loader):
+    i = 0
+    for idx, x, target in tqdm(train_loader):
+        if i == 0:
+            X_train = x
+            idx_train = idx
+            target_train = target
+            i += 1
+        else:
+            X_train = torch.cat([X_train, x], axis=0)
+            idx_train = torch.cat([idx_train, idx], axis=0)
+            target_train = torch.cat([target_train, target], axis=0)
+    return X_train, idx_train, target_train
+
 def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
     model.eval()
     correct_cnt = 0
@@ -60,8 +74,8 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     adversary = LinfPGDAttack(classifier, epsilon=args['epsilon'], k=args['num_k'], a=args['alpha'])
     X_train, _, y_train = load_CIFAR10(train_loader)
 
-
     X_train1 = X_train.numpy()
+    print(X_train1[0])
     X_train1 = np.reshape(X_train1, (X_train1.shape[0], -1))
 
     # load the model from disk
@@ -69,6 +83,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
     knn = pickle.load(open(filename, 'rb'))
 
     predict = knn.predict(X_train1)
+
     print(predict) # [47189 42769 21299 ... 13253 17940 29497]
 
     if use_cuda:
@@ -136,20 +151,6 @@ def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, 
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_accuracy = correct / len(test_loader.dataset)
     return test_accuracy
-
-def load_CIFAR10(train_loader):
-    i = 0
-    for idx, x, target in tqdm(train_loader):
-        if i == 0:
-            X_train = x
-            idx_train = idx
-            target_train = target
-            i += 1
-        else:
-            X_train = torch.cat([X_train, x], axis=0)
-            idx_train = torch.cat([idx_train, idx], axis=0)
-            target_train = torch.cat([target_train, target], axis=0)
-    return X_train, idx_train, target_train
 
 def main(args):
     use_cuda = torch.cuda.is_available()

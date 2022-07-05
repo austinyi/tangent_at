@@ -69,12 +69,14 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
+                    print(angles)
                     ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
                     print(ep)
                     x_adv = adv_train(x, target_pred, model, train_criterion, adversary, ep=ep)
                 elif args['criterion'] == 'tan':
                     components = compute_tangent(args, result_dir, idx, x, x_adv_init)
+                    print(components)
                     ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'], args['threshold'], args['train_ratio'],
                                 args['precision'], args['round'])
                     print(ep)

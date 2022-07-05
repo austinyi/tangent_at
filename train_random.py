@@ -25,6 +25,7 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
+        print(ep)
     elif cri_method == 'angle_skip':
         ep = np.zeros(inputs.size)
         ep[inputs < threshold*math.pi] = epsilon

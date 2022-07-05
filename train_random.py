@@ -25,7 +25,6 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
-        print(ep)
     elif cri_method == 'angle_skip':
         ep = np.zeros(inputs.size)
         ep[inputs < threshold*math.pi] = epsilon
@@ -52,10 +51,8 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
         ep = np.square(rank / inputs.shape[0]) * epsilon
     elif cri_method == 'tan_random':
         #ep = np.random.rand(inputs.shape[0])*epsilon
-        print(inputs.shape[0])
         ep = (np.arange(0,inputs.shape[0]) + 1) / inputs.shape[0] * epsilon
         np.random.shuffle(ep)
-        print(ep)
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -156,29 +153,30 @@ def main(args):
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
     testattack(model, test_loader, args, use_cuda=use_cuda)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
-    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
-    parser.add_argument("-n", "--num_epoch", type=int, default=100)
+    parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="wrn")
+    parser.add_argument("-n", "--num_epoch", type=int, default=120)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
-    #parser.add_argument("-l", "--lr", type=float, default=1e-3)
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--lr-schedule', default='piecewise',
                         choices=['superconverge', 'piecewise', 'linear', 'onedrop', 'multipledecay', 'cosine'])
     parser.add_argument('--lr-max', default=0.1, type=float)
     parser.add_argument('--lr-one-drop', default=0.01, type=float)
     parser.add_argument('--lr-drop-epoch', default=100, type=int)
-    parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_square','random'])
+    parser.add_argument("--criterion", default='tan', choices=['angle', 'tan'])
+    parser.add_argument("--method", default='random', choices=['num', 'rank','skip','rank_binary','rank_exp','num_exp','random'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')
-    parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument("--weight_decay", type=float, default=2e-4)
     parser.add_argument("--root", default=r'/data', help='the directory that contains the project folder')
     parser.add_argument("--root_data", default=r'/', help='the dir that contains the data folder')
     parser.add_argument("--result_dir", default=r'/data/tangent', help='the working directory that contains AA, AAA')
     parser.add_argument("--clean", action="store_true", default=False, help='if true, clean training')
+    parser.add_argument("--standard", action="store_true", default=False, help='if true, standard adversarial training')
+    parser.add_argument("--save", action="store_true", default=False, help='if true, save the trained model')
     parser.add_argument("--model_folder", default='./models',
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=True,
@@ -188,6 +186,7 @@ if __name__ == "__main__":
     parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
     parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
     parser.add_argument('--train_epsilon', type=float, default=0.031, help='adaptive train ratio')
+    parser.add_argument('--exp', type=float, default=2, help='criterion exponent')
     args = vars(parser.parse_args())
     args['file_name'] = args['file_name'] + '_' + args['criterion'] + '_' + args['method']
     if args['dataset'] == 'mnist':
@@ -197,7 +196,7 @@ if __name__ == "__main__":
         args['batch_size'] = 100
         args['print_every'] = 300
     elif args['dataset'] == 'cifar10':
-        args['alpha'] = 0.01
+        args['alpha'] = 2 / 255
         args['num_k'] = 7
         args['epsilon'] = 8 / 255
         args['batch_size'] = 100
@@ -258,5 +257,13 @@ if __name__ == "__main__":
         def lr_schedule(t):
             return args['lr_max'] * 0.5 * (1 + np.cos(t / args['num_epoch'] * np.pi))
 
+    # Training settings
+    seed = args['seed']
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
 
     main(args)

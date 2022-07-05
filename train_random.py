@@ -52,7 +52,8 @@ def get_ep(inputs, epsilon, criterion, method, threshold=0.4, ratio=0.5, precisi
     elif cri_method == 'tan_random':
         #ep = np.random.rand(inputs.shape[0])*epsilon
         print(inputs.shape[0])
-        ep = (np.arange(0,inputs.shape[0]) + 1) / inputs.shape[0]
+        ep = (np.arange(0,inputs.shape[0]) + 1) / inputs.shape[0] * epsilon
+        ep = np.random.shuffle(ep)
         print(ep)
     else:
         raise Exception("No such criterion method combination")

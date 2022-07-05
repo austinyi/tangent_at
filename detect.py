@@ -102,6 +102,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         #print(X_adv_knn.shape)
         natural_idx = knn.predict(X_knn)
         print(natural_idx)
+        print((adv_idx == natural_idx).sum())
         #print(predict_idx)
         #print(X_train[predict_idx].shape)
         #print(X_adv.shape)

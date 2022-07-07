@@ -25,6 +25,7 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
+        print(ep)
     elif cri_method == 'angle_skip':
         ep = np.zeros(inputs.size)
         ep[inputs < threshold*math.pi] = epsilon
@@ -53,6 +54,11 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
         ep = np.power((1 / (inputs * np.max(1 / inputs))), exp) * epsilon
     elif cri_method == 'tan_num_exp':
         ep = np.power(inputs / np.max(inputs), exp) * epsilon
+    elif cri_method == 'tan_random':
+        # ep = np.random.rand(inputs.shape[0])*epsilon
+        ep = (np.arange(0, inputs.shape[0]) + 1) / inputs.shape[0] * epsilon
+        np.random.shuffle(ep)
+        print(ep)
     else:
         raise Exception("No such criterion method combination")
     if rou:
@@ -185,7 +191,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr-one-drop', default=0.01, type=float)
     parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_exp','num_exp'])
+    parser.add_argument("--method", default='num', choices=['num', 'rank','skip','rank_binary','rank_exp','num_exp','random'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')

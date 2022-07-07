@@ -25,7 +25,6 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
     elif cri_method == 'tan_rank':
         rank = np.argsort(np.argsort(inputs)) + 1
         ep = rank / inputs.shape[0] * epsilon
-        print(ep)
     elif cri_method == 'angle_skip':
         ep = np.zeros(inputs.size)
         ep[inputs < threshold*math.pi] = epsilon
@@ -58,7 +57,6 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
         # ep = np.random.rand(inputs.shape[0])*epsilon
         ep = (np.arange(0, inputs.shape[0]) + 1) / inputs.shape[0] * epsilon
         np.random.shuffle(ep)
-        print(ep)
     else:
         raise Exception("No such criterion method combination")
     if rou:

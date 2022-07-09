@@ -18,6 +18,8 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
         ep = (1 / (inputs * np.max(1 / inputs))) * epsilon
     elif cri_method == 'tan_num':
         ep = inputs / np.max(inputs) * epsilon
+    elif cri_method == 'tan_num2':
+        ep = np.min(inputs) / inputs * epsilon
     elif cri_method == 'angle_rank':
         rank = np.argsort(
             np.argsort(1 / inputs)) + 1  # to remove zero, 1/inputs since for angle the smaller the larger the epsilon
@@ -196,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr-one-drop', default=0.01, type=float)
     parser.add_argument('--lr-drop-epoch', default=100, type=int)
     parser.add_argument("--criterion", default='angle', choices=['angle', 'tan'])
-    parser.add_argument("--method", default='num', choices=['num', 'rank','rank2','skip','rank_binary','rank_exp','num_exp','random'])
+    parser.add_argument("--method", default='num', choices=['num', 'num2', 'rank','rank2','skip','rank_binary','rank_exp','num_exp','random'])
     parser.add_argument("--round", action="store_true", default=False, help='if true, round epsilon vector')
     parser.add_argument("--precision", type=int, default=4, help='precision of rounding the epsilon vector')
     parser.add_argument("--init", default=None, help='initial the model with pre-trained one')

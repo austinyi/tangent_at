@@ -104,6 +104,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                             args['threshold'], args['train_ratio'], args['precision'], args['round'])
             elif args['criterion'] == 'tan':
                 components = compute_tangent(args, result_dir, idx, x, x_adv)
+                print(components)
                 ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
                             args['threshold'], args['train_ratio'], args['precision'], args['round'])
             else:

@@ -75,7 +75,7 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
 def reweightedLoss(logs, targets, ep):
     out = torch.zeros_like(targets, dtype=torch.float)
     for i in range(len(targets)):
-        out[i] = logs[i][targets[i]]*ep[i]
+        out[i] = logs[i][targets[i]]*ep[i]/0.031
     return -out.sum()/len(out)
 
 
@@ -108,9 +108,8 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
             log_softmax = torch.nn.LogSoftmax(dim=1)
             x_log = log_softmax(model(x_adv))
-            print(x_log)
-            print(target)
             loss = reweightedLoss(x_log, target, ep)
+            print(loss)
 
             ave_loss = ave_loss * 0.9 + loss.item() * 0.1
 

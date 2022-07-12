@@ -100,12 +100,12 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
 
             if args['criterion'] == 'angle':
                 angles = compute_angle(args, result_dir, idx, x, x_adv)
-                ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                            args['precision'], args['round'])
+                ep = get_ep(angles, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
+                            args['threshold'], args['train_ratio'], args['precision'], args['round'])
             elif args['criterion'] == 'tan':
                 components = compute_tangent(args, result_dir, idx, x, x_adv)
-                ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['threshold'], args['train_ratio'],
-                            args['precision'], args['round'])
+                ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
+                            args['threshold'], args['train_ratio'], args['precision'], args['round'])
             else:
                 raise Exception("No such criterion")
 

@@ -76,9 +76,7 @@ def reweightedLoss(logs, targets, ep):
     out = torch.zeros_like(targets, dtype=torch.float)
     for i in range(len(targets)):
         out[i] = logs[i][targets[i]]*ep[i]/0.031
-    #print(logs)
-    #print(ep*100000)
-    #print(out)
+    print(out)
     return -out.sum()/len(out)
 
 

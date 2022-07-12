@@ -76,9 +76,9 @@ def reweightedLoss(logs, targets, ep):
     out = torch.zeros_like(targets, dtype=torch.float)
     for i in range(len(targets)):
         out[i] = logs[i][targets[i]]*ep[i]/0.031
-    print(logs)
-    print(ep*100000)
-    print(out)
+    #print(logs)
+    #print(ep*100000)
+    #print(out)
     return -out.sum()/len(out)
 
 
@@ -104,7 +104,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                             args['threshold'], args['train_ratio'], args['precision'], args['round'])
             elif args['criterion'] == 'tan':
                 components = compute_tangent(args, result_dir, idx, x, x_adv)
-                print(components)
                 ep = get_ep(components, args['train_epsilon'], args['criterion'], args['method'], args['exp'],
                             args['threshold'], args['train_ratio'], args['precision'], args['round'])
             else:

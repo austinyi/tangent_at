@@ -77,7 +77,7 @@ def reweightedLoss(logs, targets, ep):
     for i in range(len(targets)):
         out[i] = logs[i][targets[i]]*ep[i]/0.031
     print(logs)
-    print(ep)
+    print(ep*100000)
     print(out)
     return -out.sum()/len(out)
 

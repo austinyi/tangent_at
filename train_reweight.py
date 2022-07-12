@@ -91,7 +91,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         step = 0
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
-
             target_pred = pred_batch(x, model)
             x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
 

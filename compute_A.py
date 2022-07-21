@@ -7,7 +7,10 @@ from train_ae import Autoencoder
 from tangent import save_AA, save_AAA
 from setup.utils import loaddata
 from setup.setup_pgd import to_var
-
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+from setup.setup_loader import CIFAR10
+import numpy as np
 
 def make_directories(args, result_dir):
     A_dir = os.path.join(result_dir,'A',args['dataset'])
@@ -29,6 +32,18 @@ def load_autoencoder(args):
         print("Model moved to GPU in order to speed up training.")
     return autoencoder
 
+def loaddata_without_transform(args):
+    transform_train = transforms.Compose([transforms.ToTensor()])
+    trainset = CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                       train=True, download=False, transform=transform_train)  # return index as well
+    train_loader = DataLoader(trainset, batch_size=args['batch_size'], shuffle=args['train_shuffle'])
+    transform_test = transforms.Compose([transforms.ToTensor()])
+    testset = datasets.CIFAR10(root=os.path.join(args['root_data'], 'data'),
+                               train=False, download=False, transform=transform_test)
+    test_loader = DataLoader(testset, batch_size=args['batch_size'], shuffle=False)
+
+    return train_loader, test_loader
+
 
 def saveA_AA_AAA(args, autoencoder, train_loader, result_dir):
     for idx, x, target in tqdm(train_loader):
@@ -42,14 +57,15 @@ def main(args):
     result_dir = args['result_dir']
     make_directories(args, result_dir)
     print('==> Loading data..')
-    train_loader, _ = loaddata(args)
-    
+    #train_loader, _ = loaddata(args)
+    train_loader, _ = loaddata_without_transform(args)
+
     print('==> Loading model..')
     autoencoder = load_autoencoder(args)
-    
+
     print('==> Generating components..')
     saveA_AA_AAA(args, autoencoder, train_loader, result_dir)
-    
+
     return
 
 
@@ -65,7 +81,9 @@ if __name__ == "__main__":
     parser.add_argument("--ae_load", default='ae_loss0.589.pt',
                         help="name of the autoencoder to load.")
     parser.add_argument("--train_shuffle", action="store_true",  default=False,
-                        help="do not shuffle here since we're computing the A over training set in order")    
+                        help="do not shuffle here since we're computing the A over training set in order")
+    parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
+
     args = vars(parser.parse_args())
     if args['dataset'] == 'mnist':
         args['batch_size'] = 100
@@ -81,4 +99,14 @@ if __name__ == "__main__":
     else:
         print('invalid dataset')
     print(args)
+    #main(args)
+
+    seed = args['seed']
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
+
     main(args)

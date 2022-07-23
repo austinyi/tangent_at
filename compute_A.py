@@ -47,7 +47,7 @@ def loaddata_without_transform(args):
 
 def saveA_AA_AAA(args, autoencoder, train_loader, result_dir):
     for idx, x, target in tqdm(train_loader):
-        print(idx)
+        #print(idx)
         if torch.max(idx) < 405:
             continue
         x, target = to_var(x), to_var(target)

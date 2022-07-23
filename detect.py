@@ -15,6 +15,8 @@ from setup.utils import loaddata, loadmodel, savefile
 from setup.setup_pgd_adaptive import to_var, adv_train, pred_batch, LinfPGDAttack, attack_over_test_data, GA_PGD
 from setup.setup_wrn import wrn
 from setup.setup_loader import CIFAR10
+from setup.setup_vgg import vgg16
+
 
 
 def loaddata_without_transform(args):
@@ -151,9 +153,10 @@ def main(args):
     print('==> Loading data..')
     train_loader, test_loader = loaddata_without_transform(args)
 
-    depth = args['depth']
-    width = args['width']
-    model = wrn(depth=depth, num_classes=10, widen_factor=width, dropRate=0)
+    #depth = args['depth']
+    #width = args['width']
+    #model = wrn(depth=depth, num_classes=10, widen_factor=width, dropRate=0)
+    model = vgg16()
 
     model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_plain')))
     if use_cuda:

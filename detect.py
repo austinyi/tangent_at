@@ -93,7 +93,7 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         X_adv_knn = np.reshape(X_adv_knn, (X_adv_knn.shape[0], -1))
         #print(X_adv_knn.shape)
         adv_idx = knn.predict(X_adv_knn)
-        print(adv_idx)
+        #print(adv_idx)
 
         if torch.cuda.is_available():
             X = X.cuda()
@@ -101,8 +101,8 @@ def detect_angle_tangent(classifier, train_loader, test_loader, args, use_cuda=T
         X_knn = np.reshape(X_knn, (X_knn.shape[0], -1))
         #print(X_adv_knn.shape)
         natural_idx = knn.predict(X_knn)
-        print(natural_idx)
-        print((adv_idx == natural_idx).sum())
+        #print(natural_idx)
+        #print((adv_idx == natural_idx).sum())
         #print(predict_idx)
         #print(X_train[predict_idx].shape)
         #print(X_adv.shape)
@@ -155,9 +155,15 @@ def main(args):
     width = args['width']
     model = wrn(depth=depth, num_classes=10, widen_factor=width, dropRate=0)
 
-    model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_adapt_tan_num0.892')))
+    model.load_state_dict(torch.load(os.path.join('./models/cifar10/cifar10_plain')))
     if use_cuda:
         model = model.cuda()
+
+    testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
+    testattack(model, test_loader, args, use_cuda=use_cuda)
+    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+                category="Madry", random=True)
+    print(test_pgd20_acc)
 
     detect_angle_tangent(model, train_loader, test_loader, args, use_cuda=use_cuda)
     #testattack(model, test_loader, args, use_cuda=use_cuda)

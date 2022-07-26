@@ -55,7 +55,7 @@ def cwloss(output, target,confidence=50, num_classes=4):
     return loss
 
 # Generate Adversarial Image
-def adv_train(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand_init):
+def adv(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand_init):
     model.eval()
     if category == "trades":
         x_adv = data.detach() + 0.001 * torch.randn(data.shape).cuda().detach() if rand_init else data.detach()
@@ -145,8 +145,6 @@ def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, pr
         ep = np.round(ep, precision)
     return ep
 
-
-
 def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=True):
     if use_cuda:
         model = model.cuda()
@@ -158,13 +156,13 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         ave_loss = 0
         step = 0
         for idx, x, target in tqdm(train_loader):
-            print("inside loop")
             x, target = to_var(x), to_var(target)
+
             if args['clean']:
                 x_adv = x
             elif args['standard']:
                 target_pred = pred_batch(x, model)
-                x_adv = adv_train(x, target_pred, model, train_criterion, adversary)
+                x_adv = adv(x, target_pred, model, train_criterion, adversary)
             else:
                 target_pred = pred_batch(x, model)
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
@@ -195,7 +193,6 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
             if (step + 1) % args['print_every'] == 0:
                 print("Epoch: [%d/%d], step: [%d/%d], Average Loss: %.4f" %
                       (epoch + 1, args['num_epoch'], step + 1, len(train_loader), ave_loss))
-        print("ddd")
         acc = testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
         print("Epoch {} test accuracy: {:.3f}".format(epoch, acc))
 
@@ -208,8 +205,8 @@ def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
     model.eval()
     correct_cnt = 0
     total_cnt = 0
-    #for batch_idx, (x, target) in enumerate(test_loader):
-    for idx, x, target in tqdm(test_loader):
+    for _, (x, target) in enumerate(test_loader):
+    #for idx, x, target in tqdm(test_loader):
         if use_cuda:
             x, target = x.cuda(), target.cuda()
         #x, target = Variable(x), Variable(target)
@@ -219,7 +216,6 @@ def testClassifier(test_loader, model, use_cuda=True, batch_size=100):
         _, pred_label = torch.max(out.data, 1)
         total_cnt += x.data.size()[0]
         correct_cnt += (pred_label == target.data).sum()
-    print(total_cnt)
     acc = float(correct_cnt / total_cnt)
     print("The prediction accuracy on testset is {}".format(acc))
     return acc
@@ -235,13 +231,14 @@ def testattack(classifier, test_loader, args, use_cuda=True):
     acc = attack_over_test_data(classifier, adversary, param, test_loader, use_cuda=use_cuda)
     return acc
 
-def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random):
+def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, category, random, use_cuda):
     model.eval()
     correct = 0
     with torch.enable_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
-            data, target = data.cuda(), target.cuda()
-            x_adv, _ = GA_PGD(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
+            if use_cuda:
+                data, target = data.cuda(), target.cuda()
+            x_adv = adv(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
             output = model(x_adv)
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
@@ -269,11 +266,18 @@ class HalfSphereDataSet(Dataset):
 
     return index, _x, _y
 
+class TestHalfSphereDataSet(HalfSphereDataSet):
+    def __getitem__(self, index):
+        # note that this isn't randomly selecting. It's a simple get a single item that represents an x and y
+        _x = self.X[index]
+        _y = self.Y[index]
+        return _x, _y
+
 def load_data_sphere(n_train=500, n_test=100, k=4, batch_size=32):
     x_train, y_train = sample_sphere(n=n_train, k=k)
     x_test, y_test = sample_sphere(n=n_test, k=k)
-    train_loader = iter(DataLoader(HalfSphereDataSet(x_train, y_train), batch_size=batch_size, shuffle=True))
-    test_loader = iter(DataLoader(HalfSphereDataSet(x_test, y_test), batch_size=batch_size, shuffle=True))
+    train_loader = DataLoader(HalfSphereDataSet(x_train, y_train), batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(TestHalfSphereDataSet(x_test, y_test), batch_size=batch_size, shuffle=True)
 
     return train_loader, test_loader
 
@@ -294,8 +298,8 @@ class MLP(nn.Module):
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = load_data_sphere(n_train=500, n_test=100, k=args['k'], batch_size=args['batch_size'])
-    print(train_loader.next())
+    train_loader, test_loader = load_data_sphere(n_train=1000, n_test=100, k=args['k'], batch_size=args['batch_size'])
+
     print('==> Loading model..')
     model = MLP(output_dim=args['k'])
 
@@ -303,16 +307,16 @@ def main(args):
     result_dir = args['result_dir']
     model = trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda=use_cuda)
     testClassifier(test_loader, model, use_cuda=use_cuda, batch_size=args['batch_size'])
-    testattack(model, test_loader, args, use_cuda=use_cuda)
-    #test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
-    #            category="Madry", random=True)
-    #print(test_pgd20_acc)
+    #testattack(model, test_loader, args, use_cuda=use_cuda)
+    test_pgd20_acc = eval_robust(model, test_loader, perturb_steps=20, epsilon=0.031, step_size=0.031 / 4, loss_fn="cent",
+                category="Madry", random=True, use_cuda=use_cuda)
+    print(test_pgd20_acc)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     #parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
-    parser.add_argument("-n", "--num_epoch", type=int, default=120)
+    parser.add_argument("-n", "--num_epoch", type=int, default=20)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--lr-schedule', default='piecewise',

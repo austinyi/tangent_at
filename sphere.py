@@ -162,7 +162,7 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = x
             elif args['standard']:
                 target_pred = pred_batch(x, model)
-                x_adv = adv(model, x, target, epsilon=0.031, step_size=0.031 / 4, perturb_steps=7, loss_fn="cent",
+                x_adv = adv(model, x, target, epsilon=0.031, step_size=0.031 / 4, num_steps=7, loss_fn="cent",
                             category="Madry", rand_init=True)
 
             else:

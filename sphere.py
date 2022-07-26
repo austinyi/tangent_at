@@ -162,7 +162,9 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
                 x_adv = x
             elif args['standard']:
                 target_pred = pred_batch(x, model)
-                x_adv = adv(x, target_pred, model, train_criterion, adversary)
+                x_adv = adv(model, x, target, epsilon=0.031, step_size=0.031 / 4, perturb_steps=7, loss_fn="cent",
+                            category="Madry", rand_init=True)
+
             else:
                 target_pred = pred_batch(x, model)
                 x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
@@ -236,8 +238,7 @@ def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, 
     correct = 0
     with torch.enable_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
-            if use_cuda:
-                data, target = data.cuda(), target.cuda()
+            data, target = data.cuda(), target.cuda()
             x_adv = adv(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
             output = model(x_adv)
             pred = output.max(1, keepdim=True)[1]

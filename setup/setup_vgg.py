@@ -133,8 +133,8 @@ class VGG_rse(nn.Module):
         return predict
 
 
-def vgg16():
-    return VGG_plain('VGG16', nclass=10)
+def vgg16(nclass=10):
+    return VGG_plain('VGG16', nclass=nclass)
 
 def vgg16noise(std0, std):
     return VGG_rse('VGG16',noise_init=std0, noise_inner=std, nclass=10)

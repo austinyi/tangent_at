@@ -299,7 +299,7 @@ class MLP(nn.Module):
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = load_data_sphere(n_train=1000, n_test=100, k=args['k'], batch_size=args['batch_size'])
+    train_loader, test_loader = load_data_sphere(n_train=args['n_train'], n_test=args['n_test'], k=args['k'], batch_size=args['batch_size'])
 
     print('==> Loading model..')
     model = MLP(output_dim=args['k'])
@@ -318,6 +318,8 @@ if __name__ == "__main__":
     #parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
     parser.add_argument("-n", "--num_epoch", type=int, default=20)
+    parser.add_argument("--n_train", type=int, default=10000)
+    parser.add_argument("--n_test", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed')
     parser.add_argument('--lr-schedule', default='piecewise',
@@ -341,8 +343,6 @@ if __name__ == "__main__":
                         help="Path to the folder that contains checkpoint.")
     parser.add_argument("--train_shuffle", action="store_false", default=True,
                         help="shuffle in training or not")
-    parser.add_argument('--depth', type=int, default=32, help='WRN depth')
-    parser.add_argument('--width', type=int, default=10, help='WRN width factor')
     parser.add_argument('--threshold', type=float, default=0.4, help='adaptive train threshold')
     parser.add_argument('--train_ratio', type=float, default=0.5, help='adaptive train ratio')
     parser.add_argument('--train_epsilon', type=float, default=0.031, help='adaptive train ratio')

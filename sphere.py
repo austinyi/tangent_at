@@ -55,16 +55,32 @@ def cwloss(output, target,confidence=50, num_classes=4):
     return loss
 
 # Generate Adversarial Image
-def adv(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand_init):
+def adv(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand_init,ep=None):
     model.eval()
+    '''
     if category == "trades":
         x_adv = data.detach() + 0.001 * torch.randn(data.shape).cuda().detach() if rand_init else data.detach()
         nat_output = model(data)
     if category == "Madry":
         x_adv = data.detach() + torch.from_numpy(np.random.uniform(-epsilon, epsilon, data.shape)).float().cuda() if rand_init else data.detach()
         x_adv = torch.clamp(x_adv, 0.0, 1.0)
+    '''
+    if torch.cuda.is_available():
+        data, target = data.cuda(), target.cuda()
+
+    if rand_init:
+        rand = torch.Tensor(data.shape).uniform_(-epsilon, epsilon)
+        if torch.cuda.is_available():
+            rand = rand.cuda()
+        X = data + rand
+    else:
+        X = data.clone()
+
+    target = to_var(target)
+
     for k in range(num_steps):
-        x_adv.requires_grad_()
+        x_adv = to_var(X, requires_grad=True)
+        #x_adv.requires_grad_()
         output = model(x_adv)
 
         model.zero_grad()
@@ -78,11 +94,24 @@ def adv(model, data, target, epsilon, step_size, num_steps,loss_fn,category,rand
                 loss_adv = criterion_kl(F.log_softmax(output, dim=1),F.softmax(nat_output, dim=1))
         loss_adv.backward()
         eta = step_size * x_adv.grad.sign()
+
         # Update adversarial data
         x_adv = x_adv.detach() + eta
-        x_adv = torch.min(torch.max(x_adv, data - epsilon), data + epsilon)
-        x_adv = torch.clamp(x_adv, 0.0, 1.0)
-    x_adv = Variable(x_adv, requires_grad=False)
+
+        diff = x_adv - data
+        if ep is not None:
+            new_diff = []
+            for j in range(ep.shape[0]):
+                new_diff.append(torch.clamp(diff[j], -ep[j], ep[j]))
+            new_diff = torch.stack(new_diff)
+            diff = new_diff
+        else:
+            diff.clamp_(-epsilon,epsilon)
+
+        x_adv.detach().copy_((diff + data).clamp_(0, 1))
+        #x_adv = torch.min(torch.max(x_adv, data - epsilon), data + epsilon)
+        #x_adv = torch.clamp(x_adv, 0.0, 1.0)
+    #x_adv = Variable(x_adv, requires_grad=False)
     return x_adv
 
 def get_ep(inputs, epsilon, criterion, method, exp, threshold=0.4, ratio=0.5, precision=3, rou=True):
@@ -157,17 +186,14 @@ def trainClassifier(args, model, result_dir, train_loader, test_loader, use_cuda
         step = 0
         for idx, x, target in tqdm(train_loader):
             x, target = to_var(x), to_var(target)
-
             if args['clean']:
                 x_adv = x
             elif args['standard']:
-                target_pred = pred_batch(x, model)
                 x_adv = adv(model, x, target, epsilon=0.031, step_size=0.031 / 4, num_steps=7, loss_fn="cent",
                             category="Madry", rand_init=True)
-
             else:
-                target_pred = pred_batch(x, model)
-                x_adv_init = adv_train(x, target_pred, model, train_criterion, adversary)
+                x_adv_init = adv(model, x, target, epsilon=0.031, step_size=0.031 / 4, num_steps=7, loss_fn="cent",
+                            category="Madry", rand_init=True)
 
                 if args['criterion'] == 'angle':
                     angles = compute_angle(args, result_dir, idx, x, x_adv_init)
@@ -238,7 +264,8 @@ def eval_robust(model, test_loader, perturb_steps, epsilon, step_size, loss_fn, 
     correct = 0
     with torch.enable_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
-            data, target = data.cuda(), target.cuda()
+            if use_cuda:
+                data, target = data.cuda(), target.cuda()
             x_adv = adv(model,data,target,epsilon,step_size,perturb_steps,loss_fn,category,rand_init=random)
             output = model(x_adv)
             pred = output.max(1, keepdim=True)[1]
@@ -317,7 +344,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training defense models')
     #parser.add_argument("-d", '--dataset', choices=["mnist", "cifar10", "stl10", "tiny"], default="cifar10")
     parser.add_argument("-m", '--model', choices=["vgg16", "wrn"], default="vgg16")
-    parser.add_argument("-n", "--num_epoch", type=int, default=20)
+    parser.add_argument("-n", "--num_epoch", type=int, default=2)
     parser.add_argument("--n_train", type=int, default=10000)
     parser.add_argument("--n_test", type=int, default=100)
     parser.add_argument("-f", "--file_name", default="cifar10_adapt")

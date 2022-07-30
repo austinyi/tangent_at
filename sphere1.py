@@ -31,7 +31,14 @@ def sample_sphere(n=100, k=4, r=1):
     x1 = np.cos(phi) * np.cos(theta)
     x2 = np.cos(phi) * np.sin(theta)
     x3 = np.sin(phi)
-    x = np.stack((x1, x2, x3), axis=1)
+    x4 = np.random.uniform(0,1,n)
+    x5 = np.random.uniform(0,1,n)
+    x6 = np.random.uniform(0,1,n)
+    x7 = np.random.uniform(0, 1, n)
+    x8 = np.random.uniform(0, 1, n)
+    x9 = np.random.uniform(0, 1, n)
+    x10 = np.random.uniform(0, 1, n)
+    x = np.stack((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), axis=1)
 
     x, y = torch.from_numpy(x), torch.from_numpy(y)
 
@@ -322,7 +329,7 @@ def load_data_sphere(n_train=500, n_test=100, k=4, batch_size=32):
 
 # Define an MLP model
 class MLP(nn.Module):
-    def __init__(self, input_dim=3, output_dim=4):
+    def __init__(self, input_dim=10, output_dim=4):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_dim, 64)
         self.fc2 = nn.Linear(64, 32)
@@ -410,7 +417,7 @@ if __name__ == "__main__":
 
     args['epsilon'] = 16/255
     args['alpha'] = args['epsilon']/4
-    args['k'] = 4
+    args['k'] = 16
     print(args)
 
 

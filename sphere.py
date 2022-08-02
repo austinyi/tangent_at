@@ -410,7 +410,7 @@ if __name__ == "__main__":
 
     args['epsilon'] = 16/255
     args['alpha'] = args['epsilon']/4
-    args['k'] = 4
+    args['k'] = 16
     print(args)
 
 

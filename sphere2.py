@@ -1,4 +1,4 @@
-### high dimension
+### no data close to decision boundary
 
 import os
 # os.chdir(r'D:\yaoli\tangent')
@@ -19,28 +19,23 @@ import matplotlib.pyplot as plt
 
 # Generate data from half-sphere
 # Generate n data which has k classes
-def sample_sphere(n=100, k=4, r=1):
+def sample_sphere(n=100, k=4, r=1, prop = 0):
 
-    theta = np.random.rand(n) * 2 * math.pi
-    phi = np.random.rand(n) * math.pi / 2
-
+    alpha = prop*2*math.pi/k
+    theta = alpha + np.random.rand(n) * (2*math.pi/k - 2*alpha)
+    #theta = np.random.rand(n) * 2 * math.pi
+    #phi = np.random.rand(n) * math.pi / 2
+    phi = np.random.rand(n) * math.pi / 2 * (1 - prop)
     # Generate y
-    y = np.zeros(n)
-    for i in range(k):
-        y[(2 * i * math.pi / k < theta) & (theta < 2 * (i + 1) * math.pi / k)] = i
+    #y = np.zeros(n)
+    y = np.random.randint(k, size=n)
+    theta += 2*math.pi/k * y
 
     # Generate x
     x1 = np.cos(phi) * np.cos(theta)
     x2 = np.cos(phi) * np.sin(theta)
     x3 = np.sin(phi)
-    x4 = np.random.uniform(0,1,n)
-    x5 = np.random.uniform(0,1,n)
-    x6 = np.random.uniform(0,1,n)
-    x7 = np.random.uniform(0, 1, n)
-    x8 = np.random.uniform(0, 1, n)
-    x9 = np.random.uniform(0, 1, n)
-    x10 = np.random.uniform(0, 1, n)
-    x = np.stack((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), axis=1)
+    x = np.stack((x1, x2, x3), axis=1)
 
     x, y = torch.from_numpy(x), torch.from_numpy(y)
 
@@ -321,9 +316,9 @@ class TestHalfSphereDataSet(HalfSphereDataSet):
         _y = self.Y[index]
         return _x, _y
 
-def load_data_sphere(n_train=500, n_test=100, k=4, batch_size=32):
-    x_train, y_train = sample_sphere(n=n_train, k=k)
-    x_test, y_test = sample_sphere(n=n_test, k=k)
+def load_data_sphere(n_train=500, n_test=100, k=4, prop=0.1, batch_size=32):
+    x_train, y_train = sample_sphere(n=n_train, k=k, r=1, prop=prop)
+    x_test, y_test = sample_sphere(n=n_test, k=k, r=1, prop=prop)
     train_loader = DataLoader(HalfSphereDataSet(x_train, y_train), batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(TestHalfSphereDataSet(x_test, y_test), batch_size=batch_size, shuffle=True)
 
@@ -331,7 +326,7 @@ def load_data_sphere(n_train=500, n_test=100, k=4, batch_size=32):
 
 # Define an MLP model
 class MLP(nn.Module):
-    def __init__(self, input_dim=10, output_dim=4):
+    def __init__(self, input_dim=3, output_dim=4):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_dim, 64)
         self.fc2 = nn.Linear(64, 32)
@@ -346,7 +341,7 @@ class MLP(nn.Module):
 def main(args):
     use_cuda = torch.cuda.is_available()
     print('==> Loading data..')
-    train_loader, test_loader = load_data_sphere(n_train=args['n_train'], n_test=args['n_test'], k=args['k'], batch_size=args['batch_size'])
+    train_loader, test_loader = load_data_sphere(n_train=args['n_train'], n_test=args['n_test'], k=args['k'], prop=args['prop'], batch_size=args['batch_size'])
 
     print('==> Loading model..')
     model = MLP(output_dim=args['k'])
@@ -417,9 +412,10 @@ if __name__ == "__main__":
     args['print_every'] = 250
 
 
-    args['epsilon'] = 16/255
+    args['epsilon'] = 8/255
     args['alpha'] = args['epsilon']/4
-    args['k'] = 16
+    args['k'] = 32
+    args['prop'] = 0.1
     print(args)
 
 
